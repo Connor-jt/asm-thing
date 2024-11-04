@@ -1,17 +1,26 @@
 ExitProcess PROTO
+PostQuitMessage PROTO
 RegisterClassExA PROTO
 GetModuleHandleA PROTO
 CreateWindowExA PROTO
 DefWindowProcA PROTO
+ShowWindow PROTO
+GetMessageA PROTO
+TranslateMessage PROTO
+DispatchMessageA PROTO
+GetLastError PROTO
+
+
 
 .data
-cWindowClassName db "My Window Class", 0
-cWindowName db "My Window Name", 0
+cWindowClassName db "Example Window Class", 0
+cWindowName db "Example Window Name", 0
 
 
 .data?
 dHInstance dq ?
 dWindowClass db 80 dup(?)
+dMSG db 48 dup(?)
 dHwnd dq ?
 
 
@@ -20,14 +29,11 @@ dHwnd dq ?
 
 .code
 main PROC
-	sub rsp, 28h	; align stack + 'shadow space'
-	
+	sub rsp, 28h	; align stack + 'shadow space' for all top level funcs
 	; get module handle
 		mov rcx, 0
 		call GetModuleHandleA
 		mov dHInstance, rax
-	;
-
 	; register window class
 		mov dword ptr[OFFSET dWindowClass],    80	;cbSize
 		mov dword ptr[OFFSET dWindowClass+4],  0	;style
@@ -47,9 +53,7 @@ main PROC
 
 		lea rcx, dWindowClass
 		call RegisterClassExA ; output ignored
-	;
-	add rsp, 20h
-
+	
 	; create window
 		push  0
 		push  dHInstance
@@ -65,30 +69,47 @@ main PROC
 		lea   rdx, cWindowClassName
 		xor   ecx, ecx
 		call  CreateWindowExA
-
+		; if window status 0 -> fail
 		cmp   rax, 0
-		je    exit
+		je    debug_exit
 		mov   dHwnd, rax
-	;
+		add rsp, 60h
+	; show window
+		mov rdx, 10 ; SW_SHOWDEFAULT
+		mov rcx, dHwnd
+		call ShowWindow
 
+messageLoop:
+    ; retrieve a message 
+		mov r9, 0
+		mov r8, 0
+		mov rdx, 0
+		lea rcx, dMSG
+		call GetMessageA
+		cmp eax, 0
+		je exit
+	; translate
+		lea rcx, dMSG
+		call TranslateMessage
+    ; dispatch
+		lea rcx, dMSG
+		call DispatchMessageA
+	jmp messageLoop
 
-
+debug_exit:
+	call GetLastError
+	mov rdx, rax
 exit:
-	mov rcx, 12345678	; the exit code
+	mov rcx, 0
 	call ExitProcess	
 main ENDP
 
 
 
 ; Window procedure
-WinProc PROC hWin:QWORD, uMsg:DWORD, wParam:QWORD, lParam:QWORD
+WinProc PROC hWin:QWORD, uMsg:DWORD, wParam:QWORD, lParam:QWORD 
+; RCX:hWin, EDX:uMsg, R8:wParam, R9:lParam
 
-; hWin in RCX
-; uMsg in EDX
-; wParam in R8
-; lParam in R9
-
-    ; Check the message uMsg (is in edx)
     cmp     edx, 1
     je      handleCreateMsg
     cmp     edx, 15
@@ -98,9 +119,9 @@ WinProc PROC hWin:QWORD, uMsg:DWORD, wParam:QWORD, lParam:QWORD
     cmp     edx, 5
     je      handleResizeMsg
 
-    ; default handler   (called with input params hWin,uMsg,wParam and lParam still in registers rcx,edx,r8 and r9)
+    ; default case
     sub     rsp, 20h
-    call    DefWindowProcA    ; (https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-defwindowprocw)
+    call    DefWindowProcA
     add     rsp, 20h
     ret
 
@@ -112,10 +133,10 @@ handlePaintMsg:
     xor     rax, rax
     ret
 
-handleDestroyMsg:    ;(https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-postquitmessage)
+handleDestroyMsg:
     sub     rsp, 20h
     mov     rcx, 0          ; exit with exitcode 0
-    ;call    PostQuitMessage
+    call    PostQuitMessage
     add     rsp, 20h
     xor     rax, rax
     ret
