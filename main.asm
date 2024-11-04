@@ -1,20 +1,21 @@
 ExitProcess PROTO
 PostQuitMessage PROTO
-RegisterClassExA PROTO
-GetModuleHandleA PROTO
-CreateWindowExA PROTO
-DefWindowProcA PROTO
+RegisterClassExW PROTO
+GetModuleHandleW PROTO
+CreateWindowExW PROTO
+DefWindowProcW PROTO
 ShowWindow PROTO
-GetMessageA PROTO
+GetMessageW PROTO
 TranslateMessage PROTO
-DispatchMessageA PROTO
+DispatchMessageW PROTO
 GetLastError PROTO
 
 
 
+
 .data
-cWindowClassName db "Example Window Class", 0
-cWindowName db "Example Window Name", 0
+cWindowClassName dw 'E','x','W','i','n','C','l','a','s','s', 0
+cWindowName dw 'E','x','W','i','n','N','a','m','e', 0
 
 
 .data?
@@ -32,7 +33,7 @@ main PROC
 	sub rsp, 28h	; align stack + 'shadow space' for all top level funcs
 	; get module handle
 		mov rcx, 0
-		call GetModuleHandleA
+		call GetModuleHandleW
 		mov dHInstance, rax
 	; register window class
 		mov dword ptr[OFFSET dWindowClass],    80	;cbSize
@@ -41,7 +42,7 @@ main PROC
 		mov qword ptr[OFFSET dWindowClass+8], rax 	;lpfnWndProc
 		mov dword ptr[OFFSET dWindowClass+16], 0	;cbClsExtra
 		mov dword ptr[OFFSET dWindowClass+20], 0	;cbWndExtra
-		lea rax, dHInstance
+		mov rax, [dHInstance]
 		mov qword ptr[OFFSET dWindowClass+24], rax	;hInstance
 		mov qword ptr[OFFSET dWindowClass+32], 0	;hIcon
 		mov qword ptr[OFFSET dWindowClass+40], 0	;hCursor
@@ -52,8 +53,7 @@ main PROC
 		mov qword ptr[OFFSET dWindowClass+72], 0	;hIconSm
 
 		lea rcx, dWindowClass
-		call RegisterClassExA ; output ignored
-	
+		call RegisterClassExW ; output ignored
 	; create window
 		push  0
 		push  dHInstance
@@ -68,7 +68,7 @@ main PROC
 		lea   r8, cWindowName
 		lea   rdx, cWindowClassName
 		xor   ecx, ecx
-		call  CreateWindowExA
+		call  CreateWindowExW
 		; if window status 0 -> fail
 		cmp   rax, 0
 		je    debug_exit
@@ -85,7 +85,7 @@ messageLoop:
 		mov r8, 0
 		mov rdx, 0
 		lea rcx, dMSG
-		call GetMessageA
+		call GetMessageW
 		cmp eax, 0
 		je exit
 	; translate
@@ -93,7 +93,7 @@ messageLoop:
 		call TranslateMessage
     ; dispatch
 		lea rcx, dMSG
-		call DispatchMessageA
+		call DispatchMessageW
 	jmp messageLoop
 
 debug_exit:
@@ -121,7 +121,7 @@ WinProc PROC hWin:QWORD, uMsg:DWORD, wParam:QWORD, lParam:QWORD
 
     ; default case
     sub     rsp, 20h
-    call    DefWindowProcA
+    call    DefWindowProcW
     add     rsp, 20h
     ret
 
