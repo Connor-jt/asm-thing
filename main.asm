@@ -21,7 +21,7 @@ DeleteDC PROTO
 .data
 cWindowClassName dw 'E','x','W','i','n','C','l','a','s','s', 0
 cWindowName dw 'E','x','W','i','n','N','a','m','e', 0
-cSoldierSprite dw 's','d','.','p','n','g', 0
+cSoldierSprite dw 's','d','.','b','m','p', 0
 
 .data?
 dHInstance dq ?
@@ -153,7 +153,7 @@ handlePaintMsg:
 
 	; do paint things
 		; load bitmap
-			push 10h ; fuload
+			push 30h ; fuload
 			push 0 ; cy
 			mov r9, 0 ; cx
 			mov r8, 0 ; type

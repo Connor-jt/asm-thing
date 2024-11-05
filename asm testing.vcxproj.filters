@@ -25,10 +25,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="sd.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="x64\Debug\sd.png">
+    <Image Include="sd.bmp">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>
