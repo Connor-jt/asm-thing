@@ -9,9 +9,9 @@ GetMessageW PROTO
 TranslateMessage PROTO
 DispatchMessageW PROTO
 GetLastError PROTO
-
-
-
+BeginPaint PROTO
+FillRect PROTO
+EndPaint PROTO 
 
 .data
 cWindowClassName dw 'E','x','W','i','n','C','l','a','s','s', 0
@@ -130,6 +130,31 @@ handleCreateMsg:
     ret
 
 handlePaintMsg:
+	sub rsp, 68h ; allocate room for paint struct + 20h for shadow space
+	mov r13, rsp + 20h ; store paintstruct
+	
+	; begin paint
+		mov rdx, r13   ; paintstruct*
+		mov rcx, dHwnd ; hwnd
+		call BeginPaint
+		mov r12, rax ; store hdc
+	; clear paint
+		mov r8, 6 ; hbrush 
+		mov rdx, r13 + 12 ; &paintstruct.rcPaint
+		mov rcx, r12 ; hdc
+		call FillRect
+
+	; do paint things
+
+	; end paint
+		mov rdx, r13   ; paintstruct*
+		mov rcx, dHwnd ; hwnd
+		call EndPaint
+
+	add rsp, 20h ; clear shadow space
+
+
+
     xor     rax, rax
     ret
 
