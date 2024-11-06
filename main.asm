@@ -16,6 +16,7 @@ LoadImageW PROTO
 SelectObject PROTO
 CreateCompatibleDC PROTO
 BitBlt PROTO
+TransparentBlt PROTO 
 DeleteDC PROTO
 
 .data
@@ -24,12 +25,17 @@ cWindowName dw 'E','x','W','i','n','N','a','m','e', 0
 cSoldierSprite dw 's','d','.','b','m','p', 0
 
 .data?
+; internal windows stuff
 dHInstance dq ?
 dWindowClass db 80 dup(?)
 dMSG db 48 dup(?)
 dHwnd dq ?
 
-
+; game structs
+dSoldierSprite db 20 dup(?) ; 0x0 bitmap ptr
+							; 0x8 mask bitmap ptr
+							; 0x10 bitmap dimensions (1x4byte)
+;
 
 
 
@@ -153,7 +159,7 @@ handlePaintMsg:
 
 	; do paint things
 		; load bitmap
-			push 30h ; fuload
+			push 10h ; fuload
 			push 0 ; cy
 			mov r9, 0 ; cx
 			mov r8, 0 ; type
@@ -177,9 +183,24 @@ handlePaintMsg:
 			mov rcx, r13 ; hdmem
 			call SelectObject
 		; perform transfer
+			;push 0 ; align stack
+			;push 00CC0020h ; copy op
+			;push 0 ; src y
+			;push 0 ; src x
+			;push r13 ; hdc src
+			;push 32 ; height
+			;mov r9, 32 ; width
+			;mov r8, 0 ; y
+			;mov rdx, 0 ; x
+			;mov rcx, r12 ; hdc
+			;sub rsp, 20h
+			;call BitBlt
+			;add rsp, 50h
+		; perform transparency transfer
 			push 0 ; align stack
-
-			push 00CC0020h ; copy op
+			push 1h ; transparency color
+			push 32 ; src height
+			push 32 ; src width
 			push 0 ; src y
 			push 0 ; src x
 			push r13 ; hdc src
@@ -189,8 +210,10 @@ handlePaintMsg:
 			mov rdx, 0 ; x
 			mov rcx, r12 ; hdc
 			sub rsp, 20h
-			call BitBlt
-			add rsp, 50h
+			call TransparentBlt
+			add rsp, 60h
+			
+
 		; delete hdcmem
 			mov rcx, r13
 			call DeleteDC
