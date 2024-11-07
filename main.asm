@@ -10,6 +10,10 @@ TranslateMessage PROTO
 DispatchMessageW PROTO
 GetLastError PROTO
 
+extern LoadSpriteLibrary : proc ; sprite library entry
+extern TestRender : proc ; render entry
+
+
 .data
 cWindowClassName dw 'E','x','W','i','n','C','l','a','s','s', 0
 cWindowName dw 'E','x','W','i','n','N','a','m','e', 0
@@ -124,6 +128,7 @@ handleCreateMsg:
     ret
 
 handlePaintMsg:
+	mov rcx, dHwnd
 	call TestRender
     xor     rax, rax
     ret

@@ -129,4 +129,4 @@ ReleaseSpriteHDC PROC
 		pop r12
 		ret
 ReleaseSpriteHDC ENDP
-
+END
