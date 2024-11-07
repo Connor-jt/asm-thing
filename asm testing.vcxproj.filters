@@ -28,5 +28,8 @@
     <Image Include="sd.bmp">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="sdm.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

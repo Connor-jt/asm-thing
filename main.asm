@@ -16,13 +16,14 @@ LoadImageW PROTO
 SelectObject PROTO
 CreateCompatibleDC PROTO
 BitBlt PROTO
-TransparentBlt PROTO 
+MaskBlt PROTO 
 DeleteDC PROTO
 
 .data
 cWindowClassName dw 'E','x','W','i','n','C','l','a','s','s', 0
 cWindowName dw 'E','x','W','i','n','N','a','m','e', 0
 cSoldierSprite dw 's','d','.','b','m','p', 0
+cSoldierSpriteMask dw 's','d','m','.','b','m','p', 0
 
 .data?
 ; internal windows stuff
@@ -32,9 +33,10 @@ dMSG db 48 dup(?)
 dHwnd dq ?
 
 ; game structs
-dSoldierSprite db 20 dup(?) ; 0x0 bitmap ptr
+dSoldierSprite db 28 dup(?) ; 0x0 bitmap ptr
 							; 0x8 mask bitmap ptr
-							; 0x10 bitmap dimensions (1x4byte)
+							; 0x10 bitmap hdc
+							; 0x18 bitmap dimensions (1x4byte)
 ;
 
 
@@ -42,6 +44,13 @@ dSoldierSprite db 20 dup(?) ; 0x0 bitmap ptr
 .code
 main PROC
 	sub rsp, 28h	; align stack + 'shadow space' for all top level funcs
+	; load app resources
+		mov rcx, OFFSET cSoldierSprite
+		mov rdx, OFFSET cSoldierSpriteMask
+		mov r8, 32
+		mov r9, OFFSET dSoldierSprite
+		call LoadSprite
+
 	; get module handle
 		mov rcx, 0
 		call GetModuleHandleW
@@ -115,9 +124,161 @@ exit:
 	call ExitProcess	
 main ENDP
 
+; rcx: bitmap path ptr
+; rdx: maskmap path ptr
+; r8: bitmap size (x & y will be the same)
+; r9: bitmap object ptr
+LoadSprite PROC
+	; config locals
+		sub rsp, 8 ; align stack
+		push r12
+		push r13
+		mov r12, r9 ; obj ptr
+		mov r13, rdx ; mask map
+	; configure static variables (including the input size var)
+		mov qword ptr[r9+10h], 0
+		mov qword ptr[r9+18h], r8
+	; load bitmap
+		push 10h ; fuload
+		push 0 ; cy
+		mov r9, 0 ; cx
+		mov r8, 0 ; type
+		mov rdx, rcx ; filename
+		mov rcx, 0 ; hinst
+		sub rsp, 20h
+		call LoadImageW
+		add rsp, 30h
+		mov qword ptr[r12], rax
+	; load maskmap
+		push 10h ; fuload
+		push 0 ; cy
+		mov r9, 0 ; cx
+		mov r8, 0 ; type
+		mov rdx, r13 ; filename
+		mov rcx, 0 ; hinst
+		sub rsp, 20h
+		call LoadImageW
+		mov qword ptr[r12+8], rax
+		add rsp, 30h
+	; ret
+		pop r13
+		pop r12
+		add rsp, 8
+		ret
+LoadSprite ENDP
+
+; rcx: hdc
+; rdx: sprite_object
+RenderSprite PROC
+	; config locals
+		push r12
+		push r13
+		sub rsp, 28h
+		mov r12, rcx ; hdc
+		mov r13, rdx ; sprite_object
+
+	; if bitmap invalid, skip
+		cmp qword ptr [r13], 0 ; check bitmap
+		je sprite_draw_end
+		cmp qword ptr [r13+8], 0 ; check maskmap
+		je sprite_draw_end
+		cmp dword ptr [r13+18h], 0 ; check size
+		je sprite_draw_end
+
+		; if bitmap hdc mem is valid, skip
+			cmp qword ptr [r13+10h], 0
+			jne sprite_draw
+			; create hdmem
+				mov rcx, r12 ; window hdc
+				call CreateCompatibleDC
+				mov qword ptr[r13+10h], rax ; store bitmap hdc mem
+			; load bitmap
+				mov rdx, qword ptr [r13] ; bitmap
+				mov rcx, rax ; hdmem
+				call SelectObject
+
+	sprite_draw:
+		xor rax, rax ; TOOD: cleanup unnecessary casts
+		mov eax, dword ptr [r13+18h] ; grab the size 
+		mov rcx, qword ptr [r13+10h] ; + bitmap hdmem
+		mov rdx, qword ptr [r13+8] ; + maskmap 
+
+		push 0AACC0020h ; copy src foreground, maintain dst background ; copy op (00CC0020h)
+		
+		push 0 ; mask y
+		push 0 ; mask x
+		push rdx ; mask hdc src
+
+		push 0 ; src y
+		push 0 ; src x
+		push rcx ; hdc src
+
+		push rax ; height
+		mov r9, rax ; width
+		mov r8, 0 ; y
+		mov rdx, 0 ; x
+		mov rcx, r12 ; hdc
+		sub rsp, 20h
+		call MaskBlt
+		add rsp, 60h
+
+	sprite_draw_end:
+		add rsp, 28h
+		pop r13
+		pop r12
+		ret
+RenderSprite ENDP
 
 
-; Window procedure
+TestRender PROC
+	; config locals
+		push r12
+		push r13
+		sub rsp, 78h ; allocate room for paint struct + 20h for shadow space + 8 padding
+		mov r13, rsp ; store paintstruct
+		add r13, 20h
+	
+	; begin paint
+		mov rdx, r13   ; paintstruct*
+		mov rcx, dHwnd ; hwnd
+		call BeginPaint
+		mov r12, rax ; store hdc
+	; clear paint
+		mov r8, 6 ; hbrush 
+		mov rdx, r13 ; &paintstruct.rcPaint
+		add rdx, 12
+		mov rcx, r12 ; hdc
+		call FillRect
+
+
+	; do paint things
+		mov rdx, OFFSET dSoldierSprite
+		mov rcx, r12
+		call RenderSprite
+	; wipe all created devices
+		mov rcx, qword ptr [OFFSET dSoldierSprite+10h]
+		call DeleteDC
+		mov qword ptr [OFFSET dSoldierSprite+10h], 0
+
+
+	; end paint
+		mov rdx, r13   ; paintstruct*
+		mov rcx, dHwnd ; hwnd
+		call EndPaint
+
+	; return
+		add rsp, 78h ; clear shadow space
+		pop r13
+		pop r12
+		ret
+TestRender ENDP
+
+
+
+
+
+
+
 WinProc PROC hWin:QWORD, uMsg:DWORD, wParam:QWORD, lParam:QWORD 
 ; RCX:hWin, EDX:uMsg, R8:wParam, R9:lParam
 
@@ -141,94 +302,7 @@ handleCreateMsg:
     ret
 
 handlePaintMsg:
-	sub rsp, 70h ; allocate room for paint struct + 20h for shadow space
-	mov r13, rsp ; store paintstruct
-	add r13, 20h
-	
-	; begin paint
-		mov rdx, r13   ; paintstruct*
-		mov rcx, dHwnd ; hwnd
-		call BeginPaint
-		mov r12, rax ; store hdc
-	; clear paint
-		mov r8, 6 ; hbrush 
-		mov rdx, r13 ; &paintstruct.rcPaint
-		add rdx, 12
-		mov rcx, r12 ; hdc
-		call FillRect
-
-	; do paint things
-		; load bitmap
-			push 10h ; fuload
-			push 0 ; cy
-			mov r9, 0 ; cx
-			mov r8, 0 ; type
-			mov rdx, OFFSET cSoldierSprite ; filename
-			mov rcx, 0 ; hinst
-			sub rsp, 20h
-			call LoadImageW
-			mov r14, rax ; save bitmap ptr
-			add rsp, 30h
-			call GetLastError
-			mov rdx, rax
-		; check whether bitmap loaded
-			cmp r14, 0
-			je skip_paint
-		; create hdmem
-			mov rcx, r12 ; hdc
-			call CreateCompatibleDC
-			mov r13, rax ; store hdc mem
-		; load bitmap into hdmem
-			mov rdx, r14 ; bitmap
-			mov rcx, r13 ; hdmem
-			call SelectObject
-		; perform transfer
-			;push 0 ; align stack
-			;push 00CC0020h ; copy op
-			;push 0 ; src y
-			;push 0 ; src x
-			;push r13 ; hdc src
-			;push 32 ; height
-			;mov r9, 32 ; width
-			;mov r8, 0 ; y
-			;mov rdx, 0 ; x
-			;mov rcx, r12 ; hdc
-			;sub rsp, 20h
-			;call BitBlt
-			;add rsp, 50h
-		; perform transparency transfer
-			push 0 ; align stack
-			push 1h ; transparency color
-			push 32 ; src height
-			push 32 ; src width
-			push 0 ; src y
-			push 0 ; src x
-			push r13 ; hdc src
-			push 32 ; height
-			mov r9, 32 ; width
-			mov r8, 0 ; y
-			mov rdx, 0 ; x
-			mov rcx, r12 ; hdc
-			sub rsp, 20h
-			call TransparentBlt
-			add rsp, 60h
-			
-
-		; delete hdcmem
-			mov rcx, r13
-			call DeleteDC
-
-		
-skip_paint:
-	; end paint
-		mov rdx, r13   ; paintstruct*
-		mov rcx, dHwnd ; hwnd
-		call EndPaint
-
-	add rsp, 20h ; clear shadow space
-
-
-
+	call TestRender
     xor     rax, rax
     ret
 

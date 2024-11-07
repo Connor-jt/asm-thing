@@ -1,5 +1,5 @@
-
-
+//
+//
 //#include <Windows.h>
 //#include <winuser.h>
 //
@@ -19,10 +19,13 @@
 //        SelectObject(hdcMem, hBitmap);
 //        // Get the bitmap dimensions 
 //        // Use BitBlt to copy the bitmap to the window's device context 
-//        BitBlt(hdc, 0, 0, 32, 32, hdcMem, 0, 0, (DWORD)0x00CC0020);
+//        BitBlt(hdc, 0, 0, 32, 32, hdcMem, 0, 0, SRCCOPY);
 //        // Clean up 
 //        DeleteDC(hdcMem);
 //        //DeleteObject(hBitmap);
+//
+//        const int number = MAKEROP4(SRCCOPY, 0x00AA0029);
+//        const int number = (DWORD)(0xAA000000 | ((DWORD)0xAACC0020));
 //
 //    }
 //
