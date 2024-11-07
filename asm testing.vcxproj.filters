@@ -18,6 +18,12 @@
     <MASM Include="main.asm">
       <Filter>Source Files</Filter>
     </MASM>
+    <MASM Include="SRC\actors\Sprite.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
+    <MASM Include="SRC\Render.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">
