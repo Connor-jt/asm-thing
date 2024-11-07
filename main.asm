@@ -9,9 +9,6 @@ GetMessageW PROTO
 TranslateMessage PROTO
 DispatchMessageW PROTO
 GetLastError PROTO
-BeginPaint PROTO
-FillRect PROTO
-EndPaint PROTO 
 
 .data
 cWindowClassName dw 'E','x','W','i','n','C','l','a','s','s', 0
@@ -108,61 +105,11 @@ main PROC
 		call ExitProcess	
 main ENDP
 
-
-
-
-
-
-TestRender PROC
-	; config locals
-		push r12
-		push r13
-		sub rsp, 78h ; allocate room for paint struct + 20h for shadow space + 8 padding
-		mov r13, rsp ; store paintstruct
-		add r13, 20h
-	
-	; begin paint
-		mov rdx, r13   ; paintstruct*
-		mov rcx, dHwnd ; hwnd
-		call BeginPaint
-		mov r12, rax ; store hdc
-	; clear paint
-		mov r8, 6 ; hbrush 
-		mov rdx, r13 ; &paintstruct.rcPaint
-		add rdx, 12
-		mov rcx, r12 ; hdc
-		call FillRect
-
-
-	; do paint things
-		mov rdx, OFFSET dSoldierSprite
-		mov rcx, r12
-		call RenderSprite
-	; wipe all created devices
-		mov rcx, OFFSET dSoldierSprite
-		call ReleaseSpriteHDC
-
-
-	; end paint
-		mov rdx, r13   ; paintstruct*
-		mov rcx, dHwnd ; hwnd
-		call EndPaint
-
-	; return
-		add rsp, 78h ; clear shadow space
-		pop r13
-		pop r12
-		ret
-TestRender ENDP
-
-
-
-
-
-
-
+; rcx: hWin, 
+; edx: uMsg, 
+; r8: wParam, 
+; r9: lParam
 WinProc PROC hWin:QWORD, uMsg:DWORD, wParam:QWORD, lParam:QWORD 
-; RCX:hWin, EDX:uMsg, R8:wParam, R9:lParam
 
     cmp     edx, 1
     je      handleCreateMsg
@@ -189,11 +136,11 @@ handlePaintMsg:
     ret
 
 handleDestroyMsg:
-    sub     rsp, 20h
-    mov     rcx, 0          ; exit with exitcode 0
-    call    PostQuitMessage
-    add     rsp, 20h
-    xor     rax, rax
+    sub rsp, 20h
+    mov rcx, 0          ; exit with exitcode 0
+    call PostQuitMessage
+    add rsp, 20h
+    xor rax, rax
     ret
 
 handleResizeMsg:

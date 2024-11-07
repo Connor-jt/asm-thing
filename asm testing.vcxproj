@@ -144,6 +144,7 @@
   <ItemGroup>
     <MASM Include="main.asm" />
     <MASM Include="SRC\actors\Sprite.asm" />
+    <MASM Include="SRC\actors\SpriteLibrary.asm" />
     <MASM Include="SRC\Render.asm" />
   </ItemGroup>
   <ItemGroup>
