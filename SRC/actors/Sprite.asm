@@ -6,11 +6,6 @@ MaskBlt PROTO
 DeleteDC PROTO
 
 
-.data?
-dSoldierSprite db 28 dup(?) ; 0x0 bitmap ptr
-							; 0x8 mask bitmap ptr
-							; 0x10 bitmap hdc
-							; 0x18 bitmap dimensions (1x4byte)
 ;
 
 .code

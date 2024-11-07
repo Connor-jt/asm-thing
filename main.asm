@@ -13,11 +13,8 @@ GetLastError PROTO
 .data
 cWindowClassName dw 'E','x','W','i','n','C','l','a','s','s', 0
 cWindowName dw 'E','x','W','i','n','N','a','m','e', 0
-cSoldierSprite dw 's','d','.','b','m','p', 0
-cSoldierSpriteMask dw 's','d','m','.','b','m','p', 0
 
 .data?
-; internal windows stuff
 dHInstance dq ?
 dWindowClass db 80 dup(?)
 dMSG db 48 dup(?)
@@ -31,11 +28,7 @@ dHwnd dq ?
 main PROC
 	sub rsp, 28h	; align stack + 'shadow space'
 	; load app resources
-		mov rcx, OFFSET cSoldierSprite
-		mov rdx, OFFSET cSoldierSpriteMask
-		mov r8, 32
-		mov r9, OFFSET dSoldierSprite
-		call LoadSprite
+		call LoadSpriteLibrary
 
 	; get module handle
 		mov rcx, 0
