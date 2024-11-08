@@ -1,4 +1,33 @@
 //
+//#include <windows.h>
+//
+//double PCFreq = 0.0;
+//__int64 CounterStart = 0;
+//
+//int main()
+//{
+//    RedrawWindow(0, NULL, NULL, RDW_INVALIDATE);
+//
+//
+//    long cycles_per_second, start_time, end_time;
+//
+//    QueryPerformanceCounter((LARGE_INTEGER*)&start_time);
+//
+//    // some lengthy code ...
+//
+//    QueryPerformanceCounter((LARGE_INTEGER*)&end_time);
+//
+//    QueryPerformanceFrequency((LARGE_INTEGER*)&cycles_per_second);
+//
+//    long ticks = end_time - start_time;
+//    long diff_microsec = (ticks*1000000) / cycles_per_second;
+//
+//    //StartCounter();
+//    //Sleep(1000);
+//    //GetCounter();
+//    return 0;
+//}
+//
 //
 //#include <Windows.h>
 //#include <winuser.h>

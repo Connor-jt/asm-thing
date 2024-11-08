@@ -9,6 +9,10 @@ GetMessageW PROTO
 TranslateMessage PROTO
 DispatchMessageW PROTO
 GetLastError PROTO
+QueryPerformanceCounter PROTO
+QueryPerformanceFrequency PROTO
+
+
 
 extern LoadSpriteLibrary : proc ; sprite library entry
 extern TestRender : proc ; render entry
@@ -17,6 +21,11 @@ extern TestRender : proc ; render entry
 .data
 cWindowClassName dw 'E','x','W','i','n','C','l','a','s','s', 0
 cWindowName dw 'E','x','W','i','n','N','a','m','e', 0
+
+dLastTime dq 0 ; TODO: read at init so we get a usable base last value
+dCurrTime dq 0
+dTimeFequency dq 0
+dPaintIsRequested db 1
 
 .data?
 dHInstance dq ?
@@ -27,13 +36,15 @@ dHwnd dq ?
 
 
 
-
 .code
 main PROC
 	sub rsp, 28h	; align stack + 'shadow space'
 	; load app resources
 		call LoadSpriteLibrary
 
+	; get timestamp frrequency
+		mov rcx, OFFSET dTimeFequency
+		call QueryPerformanceFrequency
 	; get module handle
 		mov rcx, 0
 		call GetModuleHandleW
@@ -82,6 +93,7 @@ main PROC
 		call ShowWindow
 
 	messageLoop:
+	; get message
 		mov r9, 0
 		mov r8, 0
 		mov rdx, 0
@@ -95,8 +107,33 @@ main PROC
     ; dispatch
 		lea rcx, dMSG
 		call DispatchMessageW
-	jmp messageLoop
 
+	; process time past
+		mov rcx, OFFSET dCurrTime
+		call QueryPerformanceCounter
+		; ((dCurrTime - dLastTime) * 10000000) / frequency
+		mov rax, dCurrTime
+		sub rax, dLastTime
+		mul rax, 1000000
+		mov rcx, dTimeFequency
+		mov rdx, 0
+		div rcx            ; RAX = RAX / RCX, RDX = RAX % RCX
+	; check if time past was sufficient for a new frame
+		cmp rax, 16666
+		jge tick
+	jmp messageLoop
+	tick:
+	; write 
+		mov rax, dCurrTime
+		mov dLastTime, rax
+	; put in manual request for next paint
+		mov dPaintIsRequested, 1
+		mov r9, 1
+		mov r8, 0
+		mov rdx, 0
+		mov rcx, dHwnd
+		call RedrawWindow
+	jmp messageLoop
 	exit:
 		mov rcx, 0
 		call ExitProcess	
@@ -108,14 +145,16 @@ main ENDP
 ; r9: lParam
 WinProc PROC hWin:QWORD, uMsg:DWORD, wParam:QWORD, lParam:QWORD 
 
-    cmp     edx, 1
-    je      handleCreateMsg
     cmp     edx, 15
     je      handlePaintMsg
     cmp     edx, 2
     je      handleDestroyMsg
     cmp     edx, 5
-    je      handleResizeMsg
+    je      handle_invalid_skip
+    ;je     handleResizeMsg
+    cmp     edx, 1
+    je      handle_invalid_skip
+    ;je     handleCreateMsg
 
     ; default case
     sub     rsp, 20h
@@ -123,16 +162,19 @@ WinProc PROC hWin:QWORD, uMsg:DWORD, wParam:QWORD, lParam:QWORD
     add     rsp, 20h
     ret
 
-handleCreateMsg:
-    xor     rax, rax
-    ret
+
 
 handlePaintMsg:
-	mov rcx, dHwnd
-	call TestRender
-    xor     rax, rax
-    ret
-
+	; dont bother painting if we did not manually request this paint
+		cmp dPaintIsRequested, 0
+		je handle_invalid_skip
+	; clear manual paint request & paint
+		mov dPaintIsRequested, 0
+		mov rcx, dHwnd
+		call TestRender
+		xor rax, rax
+		ret
+		
 handleDestroyMsg:
     sub rsp, 20h
     mov rcx, 0          ; exit with exitcode 0
@@ -141,10 +183,16 @@ handleDestroyMsg:
     xor rax, rax
     ret
 
-handleResizeMsg:
+;handleCreateMsg:
+;    xor     rax, rax
+;    ret
+;handleResizeMsg:
+;    xor     rax, rax
+;    ret
+
+handle_invalid_skip:
     xor     rax, rax
     ret
-
 WinProc ENDP
 
 

@@ -7,7 +7,7 @@ EndPaint PROTO
 extern RenderSprite : proc ; sprite entry
 extern ReleaseSpriteHDC : proc ; sprite entry
 ; NOTE: temporary thing
-extern dSoldierSprite : db 
+extern dSoldierSprite : db ; not sure if this is correct or not??
 
 .code
 
