@@ -21,10 +21,12 @@ extern TestRender : proc ; render entry
 .data
 cWindowClassName dw 'E','x','W','i','n','C','l','a','s','s', 0
 cWindowName dw 'E','x','W','i','n','N','a','m','e', 0
-
-dLastTime dq 0 ; TODO: read at init so we get a usable base last value
-dCurrTime dq 0
+; constant runtimes
 dTimeFequency dq 0
+public dTimeFequency
+
+dLastTime dq 0
+dCurrTime dq 0
 dPaintIsRequested db 1
 
 .data?
@@ -42,9 +44,11 @@ main PROC
 	; load app resources
 		call LoadSpriteLibrary
 
-	; get timestamp frrequency
+	; get timestamp frrequency & set base time
 		mov rcx, OFFSET dTimeFequency
 		call QueryPerformanceFrequency
+		mov rcx, OFFSET dLastTime
+		call QueryPerformanceCounter
 	; get module handle
 		mov rcx, 0
 		call GetModuleHandleW

@@ -1,3 +1,22 @@
+
+#define _CRT_SECURE_NO_WARNINGS 1
+#include <stdio.h>      // for printf
+#include <string.h>     // for strnlen
+#include <stdlib.h>     // for _countof, _itoa fns, _MAX_COUNT macros
+
+void doody() {
+    char buffer[_MAX_U64TOSTR_BASE2_COUNT];
+    int r;
+
+
+    for (r = 10; r >= 2; --r)
+    {
+        _i64toa(-1LL, buffer, r);
+        printf("base %d: %s (%d chars)\n", r, buffer,
+            strnlen(buffer, _countof(buffer)));
+    }
+}
+
 //
 //#include <windows.h>
 //

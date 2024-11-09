@@ -27,6 +27,9 @@
     <MASM Include="SRC\actors\SpriteLibrary.asm">
       <Filter>Source Files</Filter>
     </MASM>
+    <MASM Include="SRC\utils.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">

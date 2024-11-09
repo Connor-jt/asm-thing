@@ -146,6 +146,7 @@
     <MASM Include="SRC\actors\Sprite.asm" />
     <MASM Include="SRC\actors\SpriteLibrary.asm" />
     <MASM Include="SRC\Render.asm" />
+    <MASM Include="SRC\utils.asm" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp" />
