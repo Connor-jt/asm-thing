@@ -5,7 +5,7 @@
 U64ToWStr PROC
 	; config destination
 		mov r8, rdx
-		add r8, 2
+		sub r8, 2
 		mov word ptr [r8], 0 ; null terminate
 	; config locals
 		mov rax, rcx
@@ -14,7 +14,7 @@ U64ToWStr PROC
 		cmp rax, 0
 		jne read_loop
 	; otherwise insert '0' and return
-		add r8, 2
+		sub r8, 2
 		mov word ptr [r8], 30h
 		jmp return
 	; loop the number
@@ -26,7 +26,7 @@ U64ToWStr PROC
 			xor rdx, rdx
 			div rcx ; RAX = RAX / RCX, RDX = RAX % RCX
 			
-			add r8, 2
+			sub r8, 2
 			add rdx, 30h
 			mov word ptr [r8], dx
 

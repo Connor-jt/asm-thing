@@ -1,4 +1,4 @@
-
+//
 //#define _CRT_SECURE_NO_WARNINGS 1
 //#include <stdio.h>      // for printf
 //#include <string.h>     // for strnlen
@@ -10,7 +10,7 @@
 //    int r;
 //    DT_NOCLIP
 //    DrawText();
-//
+//    SetBkMode(wdc, TRANSPARENT);
 //    for (r = 10; r >= 2; --r)
 //    {
 //        _i64toa(-1LL, buffer, r);

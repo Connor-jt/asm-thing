@@ -4,6 +4,10 @@ QueryPerformanceCounter PROTO
 BeginPaint PROTO
 FillRect PROTO
 DrawTextW PROTO
+
+SetTextColor PROTO
+SetBkMode PROTO
+
 EndPaint PROTO 
 
 U64ToWStr PROTO
@@ -97,11 +101,16 @@ TestRender PROC
 
 	; [DEBUG] render performance stuff
 		; config system vars
-			
+			mov rdx, 0h ; color
+			mov rcx, r12 ; hdc
+			call SetTextColor
+			mov rdx, 1 ; transparent
+			mov rcx, r12 ; hdc
+			call SetBkMode
 		; config wstr buffer
-			sub rsp, 40h
 			mov rbx, rsp
-			add rbx, 6
+			sub rsp, 40h
+			sub rbx, 6
 		; draw frame time
 			mov rdx, rbx
 			mov rcx, dDrawTime
@@ -113,11 +122,11 @@ TestRender PROC
 			mov word ptr [rbx+4],  0h
 
 			push 0 ; PADDING
-			mov r9, rsp; rect ptr
 			push 40 ; left
 			push 10 ; top
 			push 100 ; right
 			push 100 ; bottom
+			mov r9, rsp; rect ptr
 			push 00000120h ; format 
 			mov r8, -1 ; char count 
 			mov rdx, rax ; wstr ptr
