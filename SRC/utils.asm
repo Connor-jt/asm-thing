@@ -1,10 +1,9 @@
 
-
+.code
 ; rdx: end of buffer ptr
 ; rcx: number
 U64ToWStr PROC
 	; config destination
-		;sub rsp, 48 ; max characters
 		mov r8, rdx
 		add r8, 2
 		mov word ptr [r8], 0 ; null terminate
@@ -17,12 +16,12 @@ U64ToWStr PROC
 	; otherwise insert '0' and return
 		add r8, 2
 		mov word ptr [r8], 30h
-		jmp exit_loop
+		jmp return
 	; loop the number
 		read_loop:
 			; break loop if nothing left to process
 			cmp rax, 0
-			je exit_loop
+			je return
 			
 			xor rdx, rdx
 			div rcx ; RAX = RAX / RCX, RDX = RAX % RCX
@@ -32,8 +31,9 @@ U64ToWStr PROC
 			mov word ptr [r8], dx
 
 			jmp read_loop
-		exit_loop:
-	; return
+	return:
 		mov rax, r8
 		ret
 U64ToWStr ENDP
+
+END

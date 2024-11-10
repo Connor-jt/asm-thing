@@ -11,6 +11,7 @@ DispatchMessageW PROTO
 GetLastError PROTO
 QueryPerformanceCounter PROTO
 QueryPerformanceFrequency PROTO
+RedrawWindow PROTO
 
 
 
@@ -118,7 +119,8 @@ main PROC
 		; ((dCurrTime - dLastTime) * 10000000) / frequency
 		mov rax, dCurrTime
 		sub rax, dLastTime
-		mul rax, 1000000
+		mov rcx, 1000000
+		mul rcx
 		mov rcx, dTimeFequency
 		mov rdx, 0
 		div rcx            ; RAX = RAX / RCX, RDX = RAX % RCX
@@ -170,8 +172,8 @@ WinProc PROC hWin:QWORD, uMsg:DWORD, wParam:QWORD, lParam:QWORD
 
 handlePaintMsg:
 	; dont bother painting if we did not manually request this paint
-		cmp dPaintIsRequested, 0
-		je handle_invalid_skip
+		;cmp dPaintIsRequested, 0
+		;je handle_invalid_skip
 	; clear manual paint request & paint
 		mov dPaintIsRequested, 0
 		mov rcx, dHwnd
