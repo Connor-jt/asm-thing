@@ -125,7 +125,10 @@ main PROC
 		mov rdx, 0
 		div rcx            ; RAX = RAX / RCX, RDX = RAX % RCX
 	; check if time past was sufficient for a new frame
-		cmp rax, 16666
+		cmp rax, 100000 ; 10 fps
+		;cmp rax, 66666 ; 15 fps
+		;cmp rax, 33333 ; 30 fps
+		;cmp rax, 16666 ; 60 fps
 		jge tick
 	jmp messageLoop
 	tick:

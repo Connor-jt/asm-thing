@@ -26,8 +26,8 @@ dCurrTime dq 0
 dDrawTime dq 0
 dFrameTime dq 0
 
-dLastFrameCount dd 0
-dFrameCount dd 0
+dLastFrameCount dq 0
+dFrameCount dq 0
 
 cTesterr dw 's','d','m','.','b',' ','p','s','d','m','.','b','m','p','s','d','m','.','b',' ','p','s','d','m','.','b','m','p','s','d',' ','.','b','m','p','s',' ','m','.','m','.','b','m', 0
 
@@ -71,8 +71,8 @@ TestRender PROC
 			cmp rax, 1000
 			jl fps_tracking_end
 		; else reset fps counter
-			mov eax, dFrameCount
-			mov dLastFrameCount, eax
+			mov rax, dFrameCount
+			mov dLastFrameCount, rax
 			mov dFrameCount, 0
 			mov rax, dCurrTime
 			mov dLastTime, rax
@@ -102,7 +102,7 @@ TestRender PROC
 
 	; [DEBUG] render performance stuff
 		; config system vars
-			mov rdx, 0FF00FFffh ; color
+			mov rdx, 00000FFffh ; color
 			mov rcx, r12 ; hdc
 			call SetTextColor
 			mov rdx, 1 ; transparent
@@ -112,7 +112,7 @@ TestRender PROC
 			mov rbx, rsp
 			sub rsp, 40h
 			sub rbx, 6
-		; draw frame time
+		; draw time
 			mov rdx, rbx
 			mov rcx, dDrawTime
 			call U64ToWStr
@@ -121,12 +121,57 @@ TestRender PROC
 				mov word ptr [rbx],   70h
 				mov word ptr [rbx+2], 73h
 				mov word ptr [rbx+4],  0h
-
 			push 0 ; PADDING
 			push 100 ; bottom
-			push 20 ; right
+			push 80 ; right
 			push 40 ; top
 			push 10 ; left
+			mov r9, rsp; rect ptr
+			push 00000100h ; format 
+			mov r8, -1 ; char count 
+			mov rdx, rax ; wstr ptr
+			;mov rdx, OFFSET cTesterr ; wstr ptr
+			mov rcx, r12 ; hdc
+			sub rsp, 20h
+			call DrawTextW
+			add rsp, 50h
+		; frame time
+			mov rdx, rbx
+			mov rcx, dFrameTime
+			call U64ToWStr
+			; append to str: " ps"
+				mov word ptr [rbx-2], 20h
+				mov word ptr [rbx],   6Dh
+				mov word ptr [rbx+2], 73h
+				mov word ptr [rbx+4],  0h
+			push 0 ; PADDING
+			push 100 ; bottom
+			push 80 ; right
+			push 80 ; top
+			push 110 ; left
+			mov r9, rsp; rect ptr
+			push 00000100h ; format 
+			mov r8, -1 ; char count 
+			mov rdx, rax ; wstr ptr
+			;mov rdx, OFFSET cTesterr ; wstr ptr
+			mov rcx, r12 ; hdc
+			sub rsp, 20h
+			call DrawTextW
+			add rsp, 50h
+		; fps
+			mov rdx, rbx
+			mov rcx, dLastFrameCount
+			call U64ToWStr
+			; append to str: " ps"
+				mov word ptr [rbx-2], 66h
+				mov word ptr [rbx],   70h
+				mov word ptr [rbx+2], 73h
+				mov word ptr [rbx+4],  0h
+			push 0 ; PADDING
+			push 140 ; bottom
+			push 80 ; right
+			push 120 ; top
+			push 210 ; left
 			mov r9, rsp; rect ptr
 			push 00000100h ; format 
 			mov r8, -1 ; char count 
