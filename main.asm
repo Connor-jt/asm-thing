@@ -14,7 +14,7 @@ QueryPerformanceFrequency PROTO
 RedrawWindow PROTO
 InvalidateRect PROTO
 UpdateWindow PROTO
-
+PeekMessageW PROTO
 
 extern LoadSpriteLibrary : proc ; sprite library entry
 extern TestRender : proc ; render entry
@@ -98,22 +98,39 @@ main PROC
 		mov rcx, dHwnd
 		call ShowWindow
 
+	sub rsp, 30h
+	mov qword ptr [rsp+20h], 1
 	messageLoop:
-	; get message
+	;; get message
+	;	mov r9, 0
+	;	mov r8, 0
+	;	mov rdx, 0
+	;	lea rcx, dMSG
+	;	call GetMessageW
+	;	cmp eax, 0
+	;	je exit
+	; peek message
+		; push 1 ; we basically make this a constant in the stack
 		mov r9, 0
 		mov r8, 0
 		mov rdx, 0
 		lea rcx, dMSG
-		call GetMessageW
+		call PeekMessageW
+		; if no message then skip processing
 		cmp eax, 0
-		je exit
+		je check_tick
 	; translate
 		lea rcx, dMSG
 		call TranslateMessage
     ; dispatch
 		lea rcx, dMSG
 		call DispatchMessageW
+	; if it was a wm_quit message, then close everything down
+		mov eax, dword ptr [OFFSET dMSG+8]
+		cmp eax, 12h
+		je exit
 
+	check_tick:
 	; process time past
 		mov rcx, OFFSET dCurrTime
 		call QueryPerformanceCounter
@@ -143,14 +160,14 @@ main PROC
 		;mov rdx, 0
 		;mov rcx, dHwnd
 		;call RedrawWindow
-		mov r8, 0
+		mov r8, 1
 		mov rdx, 0
 		mov rcx, dHwnd
 		call InvalidateRect 
-		;mov r8, 0
-		;mov rdx, 0
-		;mov rcx, dHwnd
-		;call UpdateWindow	
+		mov r8, 0
+		mov rdx, 0
+		mov rcx, dHwnd
+		call UpdateWindow	
 	jmp messageLoop
 	exit:
 		mov rcx, 0

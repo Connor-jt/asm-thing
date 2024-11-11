@@ -1,4 +1,4 @@
-//
+
 //#define _CRT_SECURE_NO_WARNINGS 1
 //#include <stdio.h>      // for printf
 //#include <string.h>     // for strnlen
@@ -8,10 +8,12 @@
 //void doody() {
 //    char buffer[_MAX_U64TOSTR_BASE2_COUNT];
 //    int r;
+//    PM_REMOVE;
 //    DT_NOCLIP;
 //        DT_LEFT;
 //    DrawText();
 //    SetBkMode(wdc, TRANSPARENT);
+//    PeekMessageW();
 //    for (r = 10; r >= 2; --r)
 //    {
 //        _i64toa(-1LL, buffer, r);
