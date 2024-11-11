@@ -101,14 +101,9 @@ main PROC
 	sub rsp, 30h
 	mov qword ptr [rsp+20h], 1
 	messageLoop:
-	;; get message
-	;	mov r9, 0
-	;	mov r8, 0
-	;	mov rdx, 0
-	;	lea rcx, dMSG
-	;	call GetMessageW
-	;	cmp eax, 0
-	;	je exit
+	; TODO:::::: at the beginning of each tick, process each buffer message, then call game tick, then sleep for remainder of time left before next draw should be called???
+
+
 	; peek message
 		; push 1 ; we basically make this a constant in the stack
 		mov r9, 0
@@ -129,6 +124,8 @@ main PROC
 		mov eax, dword ptr [OFFSET dMSG+8]
 		cmp eax, 12h
 		je exit
+	; return to process next message if we successfully processed a message (implying there will be more in the queue??)
+	jmp messageLoop
 
 	check_tick:
 	; process time past
@@ -143,10 +140,10 @@ main PROC
 		mov rdx, 0
 		div rcx            ; RAX = RAX / RCX, RDX = RAX % RCX
 	; check if time past was sufficient for a new frame
-		cmp rax, 100000 ; 10 fps
+		;cmp rax, 100000 ; 10 fps
 		;cmp rax, 66666 ; 15 fps
 		;cmp rax, 33333 ; 30 fps
-		;cmp rax, 16666 ; 60 fps
+		cmp rax, 16666 ; 60 fps
 		jge tick
 	jmp messageLoop
 	tick:
@@ -155,19 +152,11 @@ main PROC
 		mov dLastTime, rax
 	; put in manual request for next paint
 		mov dPaintIsRequested, 1
-		;mov r9, 01h
-		;mov r8, 0
-		;mov rdx, 0
-		;mov rcx, dHwnd
-		;call RedrawWindow
-		mov r8, 1
-		mov rdx, 0
-		mov rcx, dHwnd
-		call InvalidateRect 
+		mov r9, 01h
 		mov r8, 0
 		mov rdx, 0
 		mov rcx, dHwnd
-		call UpdateWindow	
+		call RedrawWindow
 	jmp messageLoop
 	exit:
 		mov rcx, 0
