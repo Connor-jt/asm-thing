@@ -29,6 +29,7 @@ dFrameTime dq 0
 dLastFrameCount dd 0
 dFrameCount dd 0
 
+cTesterr dw 's','d','m','.','b',' ','p','s','d','m','.','b','m','p','s','d','m','.','b',' ','p','s','d','m','.','b','m','p','s','d',' ','.','b','m','p','s',' ','m','.','m','.','b','m', 0
 
 .code
 
@@ -83,7 +84,7 @@ TestRender PROC
 		call BeginPaint
 		mov r12, rax ; store hdc
 	; reset canvas
-		mov r8, 6 ; hbrush 
+		mov r8, 13 ; hbrush 
 		mov rdx, r13 ; &paintstruct.rcPaint
 		add rdx, 12
 		mov rcx, r12 ; hdc
@@ -101,7 +102,7 @@ TestRender PROC
 
 	; [DEBUG] render performance stuff
 		; config system vars
-			mov rdx, 0h ; color
+			mov rdx, 0FF00FFffh ; color
 			mov rcx, r12 ; hdc
 			call SetTextColor
 			mov rdx, 1 ; transparent
@@ -116,23 +117,25 @@ TestRender PROC
 			mov rcx, dDrawTime
 			call U64ToWStr
 			; append to str: " ps"
-			mov word ptr [rbx-2], 20h
-			mov word ptr [rbx],   70h
-			mov word ptr [rbx+2], 73h
-			mov word ptr [rbx+4],  0h
+				mov word ptr [rbx-2], 20h
+				mov word ptr [rbx],   70h
+				mov word ptr [rbx+2], 73h
+				mov word ptr [rbx+4],  0h
 
 			push 0 ; PADDING
-			push 40 ; left
-			push 10 ; top
-			push 100 ; right
 			push 100 ; bottom
+			push 20 ; right
+			push 40 ; top
+			push 10 ; left
 			mov r9, rsp; rect ptr
-			push 00000120h ; format 
+			push 00000100h ; format 
 			mov r8, -1 ; char count 
 			mov rdx, rax ; wstr ptr
+			;mov rdx, OFFSET cTesterr ; wstr ptr
 			mov rcx, r12 ; hdc
+			sub rsp, 20h
 			call DrawTextW
-			add rsp, 30h
+			add rsp, 50h
 		; reset vars
 			add rsp, 40h
 

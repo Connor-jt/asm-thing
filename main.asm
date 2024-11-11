@@ -134,7 +134,7 @@ main PROC
 		mov dLastTime, rax
 	; put in manual request for next paint
 		mov dPaintIsRequested, 1
-		mov r9, 1
+		mov r9, 01h
 		mov r8, 0
 		mov rdx, 0
 		mov rcx, dHwnd

@@ -8,7 +8,8 @@
 //void doody() {
 //    char buffer[_MAX_U64TOSTR_BASE2_COUNT];
 //    int r;
-//    DT_NOCLIP
+//    DT_NOCLIP;
+//        DT_LEFT;
 //    DrawText();
 //    SetBkMode(wdc, TRANSPARENT);
 //    for (r = 10; r >= 2; --r)
@@ -58,7 +59,7 @@
 //    HDC hdc = BeginPaint(hwnd, &ps);
 //
 //    // All painting occurs here, between BeginPaint and EndPaint.
-//
+//    COLOR_WINDOW
 //    FillRect(hdc, &ps.rcPaint, (HBRUSH)(6));
 //
 //    HBITMAP hBitmap = (HBITMAP)LoadImageW(0, L"res\\sd.png", 0, 0, 0, 0x00000010);
