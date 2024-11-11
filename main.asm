@@ -12,7 +12,8 @@ GetLastError PROTO
 QueryPerformanceCounter PROTO
 QueryPerformanceFrequency PROTO
 RedrawWindow PROTO
-
+InvalidateRect PROTO
+UpdateWindow PROTO
 
 
 extern LoadSpriteLibrary : proc ; sprite library entry
@@ -137,11 +138,19 @@ main PROC
 		mov dLastTime, rax
 	; put in manual request for next paint
 		mov dPaintIsRequested, 1
-		mov r9, 01h
+		;mov r9, 01h
+		;mov r8, 0
+		;mov rdx, 0
+		;mov rcx, dHwnd
+		;call RedrawWindow
 		mov r8, 0
 		mov rdx, 0
 		mov rcx, dHwnd
-		call RedrawWindow
+		call InvalidateRect 
+		;mov r8, 0
+		;mov rdx, 0
+		;mov rcx, dHwnd
+		;call UpdateWindow	
 	jmp messageLoop
 	exit:
 		mov rcx, 0

@@ -24,7 +24,6 @@ dLastTime dq 0
 dCurrTime dq 0
 
 dDrawTime dq 0
-dFrameTime dq 0
 
 dLastFrameCount dq 0
 dFrameCount dq 0
@@ -66,7 +65,6 @@ TestRender PROC
 			mov rcx, dTimeFequency
 			mov rdx, 0
 			div rcx
-			mov dFrameTime, rax
 		; if milisec elasped is less than 1000, skip
 			cmp rax, 1000
 			jl fps_tracking_end
@@ -91,13 +89,13 @@ TestRender PROC
 		call FillRect
 
 
-	; do paint things
-		mov rdx, OFFSET dSoldierSprite
-		mov rcx, r12
-		call RenderSprite
-	; wipe all created devices
-		mov rcx, OFFSET dSoldierSprite
-		call ReleaseSpriteHDC
+	;; do paint things
+;		mov rdx, OFFSET dSoldierSprite
+;		mov rcx, r12
+;		call RenderSprite
+;	; wipe all created devices
+;		mov rcx, OFFSET dSoldierSprite
+;		call ReleaseSpriteHDC
 
 
 	; [DEBUG] render performance stuff
@@ -126,29 +124,6 @@ TestRender PROC
 			push 80 ; right
 			push 40 ; top
 			push 10 ; left
-			mov r9, rsp; rect ptr
-			push 00000100h ; format 
-			mov r8, -1 ; char count 
-			mov rdx, rax ; wstr ptr
-			;mov rdx, OFFSET cTesterr ; wstr ptr
-			mov rcx, r12 ; hdc
-			sub rsp, 20h
-			call DrawTextW
-			add rsp, 50h
-		; frame time
-			mov rdx, rbx
-			mov rcx, dFrameTime
-			call U64ToWStr
-			; append to str: " ps"
-				mov word ptr [rbx-2], 20h
-				mov word ptr [rbx],   6Dh
-				mov word ptr [rbx+2], 73h
-				mov word ptr [rbx+4],  0h
-			push 0 ; PADDING
-			push 100 ; bottom
-			push 80 ; right
-			push 80 ; top
-			push 110 ; left
 			mov r9, rsp; rect ptr
 			push 00000100h ; format 
 			mov r8, -1 ; char count 
