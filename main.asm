@@ -30,6 +30,7 @@ public dTimeFequency
 
 dLastTime dq 0
 dCurrTime dq 0
+dFrameDebt dq 0
 
 .data?
 dHInstance dq ?
@@ -133,7 +134,6 @@ main PROC
 	; get time past since last tick
 		mov rcx, OFFSET dCurrTime
 		call QueryPerformanceCounter
-		; ((dCurrTime - dLastTime) * 10000000) / frequency
 		mov rax, dCurrTime
 		sub rax, dLastTime
 		mov rcx, 1000
@@ -146,12 +146,31 @@ main PROC
 		;  66 = 15 fps
 		;  33 = 30 fps
 		;  16 = 60 fps
-		mov rdx, 16
+		mov rdx, 33
+		sub rdx, dFrameDebt
 		sub rdx, rax
 		jl skip_sleep ; immediately jump to next tick if we didnt make it through this one in time
+		mov qword ptr [rsp+28h], rdx
 		mov rcx, rdx
 		call Sleep
+	; measure time spent sleeping and note it down as debt time
+		mov rcx, OFFSET dLastTime ; invert roles here, just because it makes it easier
+		call QueryPerformanceCounter
+		mov rax, dLastTime
+		sub rax, dCurrTime
+		mov rcx, 1000
+		mul rcx
+		mov rcx, dTimeFequency
+		mov rdx, 0
+		div rcx
+		;add rax, 1 ; basically just round up the miliseconds value
+		mov rcx, qword ptr [rsp+28h] ; the minimum sleep miliseconds
+		sub rax, rcx ; rax is the executed sleep miliseconds
+		mov dFrameDebt, rax ; so we write how many miliseconds we went over by
+	jmp messageLoop
+
 	skip_sleep: 
+		mov dFrameDebt, 0
 		mov rcx, OFFSET dLastTime
 		call QueryPerformanceCounter
 	jmp messageLoop
