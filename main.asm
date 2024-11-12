@@ -15,6 +15,7 @@ RedrawWindow PROTO
 InvalidateRect PROTO
 UpdateWindow PROTO
 PeekMessageW PROTO
+Sleep PROTO
 
 extern LoadSpriteLibrary : proc ; sprite library entry
 extern TestRender : proc ; render entry
@@ -29,7 +30,6 @@ public dTimeFequency
 
 dLastTime dq 0
 dCurrTime dq 0
-dPaintIsRequested db 1
 
 .data?
 dHInstance dq ?
@@ -101,19 +101,15 @@ main PROC
 	sub rsp, 30h
 	mov qword ptr [rsp+20h], 1
 	messageLoop:
-	; TODO:::::: at the beginning of each tick, process each buffer message, then call game tick, then sleep for remainder of time left before next draw should be called???
-
-
-	; peek message
 		; push 1 ; we basically make this a constant in the stack
 		mov r9, 0
 		mov r8, 0
 		mov rdx, 0
 		lea rcx, dMSG
 		call PeekMessageW
-		; if no message then skip processing
+		; if no message then we can run next game tick
 		cmp eax, 0
-		je check_tick
+		je run_tick
 	; translate
 		lea rcx, dMSG
 		call TranslateMessage
@@ -126,38 +122,40 @@ main PROC
 		je exit
 	; return to process next message if we successfully processed a message (implying there will be more in the queue??)
 	jmp messageLoop
+	
+	run_tick: ; so far we just do a redraw call and thats it
+		mov r9, 101h
+		mov r8, 0
+		mov rdx, 0
+		mov rcx, dHwnd
+		call RedrawWindow
 
-	check_tick:
-	; process time past
+	; get time past since last tick
 		mov rcx, OFFSET dCurrTime
 		call QueryPerformanceCounter
 		; ((dCurrTime - dLastTime) * 10000000) / frequency
 		mov rax, dCurrTime
 		sub rax, dLastTime
-		mov rcx, 1000000
+		mov rcx, 1000
 		mul rcx
 		mov rcx, dTimeFequency
 		mov rdx, 0
-		div rcx            ; RAX = RAX / RCX, RDX = RAX % RCX
-	; check if time past was sufficient for a new frame
-		;cmp rax, 100000 ; 10 fps
-		;cmp rax, 66666 ; 15 fps
-		;cmp rax, 33333 ; 30 fps
-		cmp rax, 16666 ; 60 fps
-		jge tick
+		div rcx ; RAX = RAX / RCX, RDX = RAX % RCX
+	; calc how much time we have to spare before running another tick
+		; 100 = 10 fps
+		;  66 = 15 fps
+		;  33 = 30 fps
+		;  16 = 60 fps
+		mov rdx, 16
+		sub rdx, rax
+		jl skip_sleep ; immediately jump to next tick if we didnt make it through this one in time
+		mov rcx, rdx
+		call Sleep
+	skip_sleep: 
+		mov rcx, OFFSET dLastTime
+		call QueryPerformanceCounter
 	jmp messageLoop
-	tick:
-	; write 
-		mov rax, dCurrTime
-		mov dLastTime, rax
-	; put in manual request for next paint
-		mov dPaintIsRequested, 1
-		mov r9, 01h
-		mov r8, 0
-		mov rdx, 0
-		mov rcx, dHwnd
-		call RedrawWindow
-	jmp messageLoop
+
 	exit:
 		mov rcx, 0
 		call ExitProcess	
@@ -189,11 +187,7 @@ WinProc PROC hWin:QWORD, uMsg:DWORD, wParam:QWORD, lParam:QWORD
 
 
 handlePaintMsg:
-	; dont bother painting if we did not manually request this paint
-		;cmp dPaintIsRequested, 0
-		;je handle_invalid_skip
-	; clear manual paint request & paint
-		mov dPaintIsRequested, 0
+	; paint
 		mov rcx, dHwnd
 		call TestRender
 		xor rax, rax
