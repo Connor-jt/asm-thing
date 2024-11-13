@@ -16,6 +16,7 @@ InvalidateRect PROTO
 UpdateWindow PROTO
 PeekMessageW PROTO
 Sleep PROTO
+LoadImageW PROTO
 
 extern LoadSpriteLibrary : proc ; sprite library entry
 extern TestRender : proc ; render entry
@@ -24,6 +25,7 @@ extern TestRender : proc ; render entry
 .data
 cWindowClassName dw 'E','x','W','i','n','C','l','a','s','s', 0
 cWindowName dw 'E','x','W','i','n','N','a','m','e', 0
+cCursorPath dw 'r','e','s','/','i','c','o','n','s','/','c','u','r','s','o','r','/','1','.','c','u','r', 0
 ; constant runtimes
 dTimeFequency dq 0
 public dTimeFequency
@@ -56,6 +58,18 @@ main PROC
 		mov rcx, 0
 		call GetModuleHandleW
 		mov dHInstance, rax
+		
+	; load cursor
+		push 10h ; fuload
+		push 0 ; cy
+		mov r9, 0 ; cx
+		mov r8, 2 ; type (cursor)
+		mov rdx, OFFSET cCursorPath ; filename
+		mov rcx, 0 ; hinst
+		sub rsp, 20h
+		call LoadImageW
+		mov qword ptr[OFFSET dWindowClass+40], rax	;hCursor
+		add rsp, 30h
 	; register window class
 		mov dword ptr[OFFSET dWindowClass],    80	;cbSize
 		mov dword ptr[OFFSET dWindowClass+4],  0	;style
@@ -66,7 +80,6 @@ main PROC
 		mov rax, [dHInstance]
 		mov qword ptr[OFFSET dWindowClass+24], rax	;hInstance
 		mov qword ptr[OFFSET dWindowClass+32], 0	;hIcon
-		mov qword ptr[OFFSET dWindowClass+40], 0	;hCursor
 		mov qword ptr[OFFSET dWindowClass+48], 0	;hbrBackground
 		mov qword ptr[OFFSET dWindowClass+56], 0	;lpszMenuName
 		lea rax, cWindowClassName
@@ -146,7 +159,7 @@ main PROC
 		;  66 = 15 fps
 		;  33 = 30 fps
 		;  16 = 60 fps
-		mov rdx, 33
+		mov rdx, 66
 		sub rdx, dFrameDebt
 		sub rdx, rax
 		jl skip_sleep ; immediately jump to next tick if we didnt make it through this one in time

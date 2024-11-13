@@ -155,6 +155,9 @@
     <Image Include="sdm.bmp" />
     <Image Include="sd.bmp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="res\icons\cursor\1.cur" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />

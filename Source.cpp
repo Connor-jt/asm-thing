@@ -1,4 +1,4 @@
-
+//
 //#define _CRT_SECURE_NO_WARNINGS 1
 //#include <stdio.h>      // for printf
 //#include <string.h>     // for strnlen
@@ -8,6 +8,7 @@
 //void doody() {
 //    char buffer[_MAX_U64TOSTR_BASE2_COUNT];
 //    int r;
+//    IMAGE_CURSOR;
 //    PM_REMOVE;
 //    DT_NOCLIP;
 //        DT_LEFT;
