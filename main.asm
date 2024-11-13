@@ -61,8 +61,8 @@ main PROC
 		
 	; load cursor
 		push 10h ; fuload
-		push 0 ; cy
-		mov r9, 0 ; cx
+		push 32 ; cy
+		mov r9, 32 ; cx
 		mov r8, 2 ; type (cursor)
 		mov rdx, OFFSET cCursorPath ; filename
 		mov rcx, 0 ; hinst

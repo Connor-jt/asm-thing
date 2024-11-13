@@ -89,13 +89,13 @@ TestRender PROC
 		call FillRect
 
 
-	;; do paint things
-;		mov rdx, OFFSET dSoldierSprite
-;		mov rcx, r12
-;		call RenderSprite
-;	; wipe all created devices
-;		mov rcx, OFFSET dSoldierSprite
-;		call ReleaseSpriteHDC
+	; do paint things
+		mov rdx, OFFSET dSoldierSprite
+		mov rcx, r12
+		call RenderSprite
+	; wipe all created devices
+		mov rcx, OFFSET dSoldierSprite
+		call ReleaseSpriteHDC
 
 
 	; [DEBUG] render performance stuff
