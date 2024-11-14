@@ -201,16 +201,32 @@ main ENDP
 ; edx: uMsg, 
 ; r8: wParam, 
 ; r9: lParam
-WinProc PROC hWin:QWORD, uMsg:DWORD, wParam:QWORD, lParam:QWORD 
+WinProc PROC hWin:QWORD, uMsg:DWORD, wParam:QWORD, lParam:QWORD ; for some reason this a a requirement to have
 
     cmp     edx, 15
     je      handlePaintMsg
 	cmp		edx, 0200h
 	je		handleMouseMove
-	cmp		edx, 0100h
-	je		handleKeyDown
-	cmp		edx, 0101h
-	je		handleKeyUp
+	; left mouse
+		cmp		edx, 0201h
+		je		handleMouseLDown
+		cmp		edx, 0202h
+		je		handleMouseLUp
+	; right mouse
+		cmp		edx, 0204h
+		je		handleMouseRDown
+		cmp		edx, 0205h
+		je		handleMouseRUp
+	; middle mouse
+		cmp		edx, 0207h
+		je		handleMouseMDown
+		cmp		edx, 0208h
+		je		handleMouseMUp
+	; key inputs
+		cmp		edx, 0100h
+		je		handleKeyDown
+		cmp		edx, 0101h
+		je		handleKeyUp
 
     cmp     edx, 2
     je      handleDestroyMsg
@@ -231,6 +247,31 @@ handlePaintMsg:
 	call TestRender
 	xor rax, rax
 	ret
+	
+handleMouseMUp:
+	lea rcx, dKeyMap
+	mov byte ptr [rcx+4], 0
+	jmp handleMouseMove
+handleMouseMDown:
+	lea rcx, dKeyMap
+	mov byte ptr [rcx+4], 1
+	jmp handleMouseMove
+handleMouseRUp:
+	lea rcx, dKeyMap
+	mov byte ptr [rcx+2], 0
+	jmp handleMouseMove
+handleMouseRDown:
+	lea rcx, dKeyMap
+	mov byte ptr [rcx+2], 1
+	jmp handleMouseMove
+handleMouseLUp:
+	lea rcx, dKeyMap
+	mov byte ptr [rcx+1], 0
+	jmp handleMouseMove
+handleMouseLDown:
+	lea rcx, dKeyMap
+	mov byte ptr [rcx+1], 1
+	;jmp handleMouseMove ; redundant
 handleMouseMove:
 	xor rax, rax
 	mov eax, r9d
@@ -238,7 +279,6 @@ handleMouseMove:
 	mov dMouseY, rax
 	movzx rax, r9w
 	mov dMouseX, rax
-
     xor rax, rax
     ret
 
