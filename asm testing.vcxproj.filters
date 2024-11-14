@@ -30,6 +30,12 @@
     <MASM Include="SRC\utils.asm">
       <Filter>Source Files</Filter>
     </MASM>
+    <MASM Include="SRC\actors\ActorBank.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
+    <MASM Include="SRC\input\InputBank.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">

@@ -20,6 +20,10 @@ LoadImageW PROTO
 
 extern LoadSpriteLibrary : proc ; sprite library entry
 extern TestRender : proc ; render entry
+; input imports
+extern dKeyMap : db
+extern dMouseX : dw
+extern dMouseY : dw
 
 
 .data
@@ -201,6 +205,13 @@ WinProc PROC hWin:QWORD, uMsg:DWORD, wParam:QWORD, lParam:QWORD
 
     cmp     edx, 15
     je      handlePaintMsg
+	cmp		edx, 0200h
+	je		handleMouseMove
+	cmp		edx, 0100h
+	je		handleKeyDown
+	cmp		edx, 0101h
+	je		handleKeyUp
+
     cmp     edx, 2
     je      handleDestroyMsg
     cmp     edx, 5
@@ -209,22 +220,42 @@ WinProc PROC hWin:QWORD, uMsg:DWORD, wParam:QWORD, lParam:QWORD
     cmp     edx, 1
     je      handle_invalid_skip
     ;je     handleCreateMsg
-
     ; default case
     sub     rsp, 20h
     call    DefWindowProcW
     add     rsp, 20h
     ret
 
-
-
 handlePaintMsg:
-	; paint
-		mov rcx, dHwnd
-		call TestRender
-		xor rax, rax
-		ret
-		
+	mov rcx, dHwnd
+	call TestRender
+	xor rax, rax
+	ret
+handleMouseMove:
+	xor rax, rax
+	mov eax, r9d
+	shr rax, 16
+	mov dMouseY, rax
+	movzx rax, r9w
+	mov dMouseX, rax
+
+    xor rax, rax
+    ret
+
+
+handleKeyDown:
+	movzx rax, r8b
+	lea rcx, dKeyMap
+	mov byte ptr [rcx + rax], 1
+    xor rax, rax
+    ret
+handleKeyUp:
+	movzx rax, r8b
+	lea rcx, dKeyMap
+	mov byte ptr [rcx + rax], 0
+    xor rax, rax
+    ret
+
 handleDestroyMsg:
     sub rsp, 20h
     mov rcx, 0          ; exit with exitcode 0

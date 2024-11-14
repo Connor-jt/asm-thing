@@ -4,6 +4,7 @@
 //#include <string.h>     // for strnlen
 //#include <stdlib.h>     // for _countof, _itoa fns, _MAX_COUNT macros
 //#include <windows.h>
+//#include <WinUser.h>
 //
 //void doody() {
 //    char buffer[_MAX_U64TOSTR_BASE2_COUNT];
@@ -12,6 +13,8 @@
 //    PM_REMOVE;
 //    DT_NOCLIP;
 //        DT_LEFT;
+//        auto xPos = GET_X_LPARAM(lParam);
+//        auto yPos = GET_Y_LPARAM(lParam);
 //    DrawText();
 //    SetBkMode(wdc, TRANSPARENT);
 //    PeekMessageW();
