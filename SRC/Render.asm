@@ -30,8 +30,6 @@ dDrawTime dq 0
 dLastFrameCount dq 0
 dFrameCount dq 0
 
-cTesterr dw 's','d','m','.','b',' ','p','s','d','m','.','b','m','p','s','d','m','.','b',' ','p','s','d','m','.','b','m','p','s','d',' ','.','b','m','p','s',' ','m','.','m','.','b','m', 0
-
 .code
 
 ; rcx: hwnd
@@ -89,7 +87,10 @@ TestRender PROC
 		add rdx, 12
 		mov rcx, r12 ; hdc
 		call FillRect
-
+	; set text state
+		mov rdx, 1 ; transparent
+		mov rcx, r12 ; hdc
+		call SetBkMode
 
 	; do paint things
 		mov rdx, OFFSET dSoldierSprite
@@ -107,9 +108,6 @@ TestRender PROC
 			mov rdx, 00000FFffh ; color
 			mov rcx, r12 ; hdc
 			call SetTextColor
-			mov rdx, 1 ; transparent
-			mov rcx, r12 ; hdc
-			call SetBkMode
 		; config wstr buffer
 			mov rbx, rsp
 			sub rsp, 40h

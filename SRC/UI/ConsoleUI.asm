@@ -1,7 +1,6 @@
 
 DrawTextW PROTO
 SetTextColor PROTO
-SetBkMode PROTO
 
 
 .data
@@ -14,7 +13,7 @@ dConsolePosition dq 0
 ; rcx: str ptr
 ConsolePrint PROC
 	lea r10, dConsoleBuffer
-	; if we already have data in the buffer, replace the null terminator with a 
+	; if we already have data in the buffer, replace the null terminator with a joiner character
 		cmp dConsolePosition, 0
 		je skip_str_join
 		mov rax, dConsolePosition
@@ -75,9 +74,6 @@ ConsoleRender PROC
 		mov rdx, 0000000ffh ; color
 		;mov rcx, rcx ; hdc (passes straight through)
 		call SetTextColor
-		mov rdx, 1 ; transparent
-		mov rcx, r12 ; hdc
-		call SetBkMode
 	; render everything to text box
 		push 0 ; ALIGN
 		push 240 ; bottom
