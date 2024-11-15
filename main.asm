@@ -21,6 +21,7 @@ LoadImageW PROTO
 extern LoadSpriteLibrary : proc ; sprite library entry
 extern TestRender : proc ; render entry
 ; input imports
+extern FlushInputs : proc
 extern dKeyMap : db
 extern dMouseX : dw
 extern dMouseY : dw
@@ -119,7 +120,8 @@ main PROC
 	sub rsp, 30h
 	mov qword ptr [rsp+20h], 1
 	messageLoop:
-		; push 1 ; we basically make this a constant in the stack
+	; check for any windows messages
+		; push 1 ; redundant; we basically make this a constant in the stack
 		mov r9, 0
 		mov r8, 0
 		mov rdx, 0
@@ -148,6 +150,10 @@ main PROC
 		mov rcx, dHwnd
 		call RedrawWindow
 
+	
+	; complete tick by flushing inputs
+		call FlushInputs
+
 	; get time past since last tick
 		mov rcx, OFFSET dCurrTime
 		call QueryPerformanceCounter
@@ -163,7 +169,7 @@ main PROC
 		;  66 = 15 fps
 		;  33 = 30 fps
 		;  16 = 60 fps
-		mov rdx, 66
+		mov rdx, 100
 		sub rdx, dFrameDebt
 		sub rdx, rax
 		jl skip_sleep ; immediately jump to next tick if we didnt make it through this one in time
@@ -210,23 +216,23 @@ WinProc PROC hWin:QWORD, uMsg:DWORD, wParam:QWORD, lParam:QWORD ; for some reaso
 	; left mouse
 		cmp		edx, 0201h
 		je		handleMouseLDown
-		cmp		edx, 0202h
-		je		handleMouseLUp
+		;cmp		edx, 0202h
+		;je		handleMouseLUp
 	; right mouse
 		cmp		edx, 0204h
 		je		handleMouseRDown
-		cmp		edx, 0205h
-		je		handleMouseRUp
+		;cmp		edx, 0205h
+		;je		handleMouseRUp
 	; middle mouse
 		cmp		edx, 0207h
 		je		handleMouseMDown
-		cmp		edx, 0208h
-		je		handleMouseMUp
+		;cmp		edx, 0208h
+		;je		handleMouseMUp
 	; key inputs
 		cmp		edx, 0100h
 		je		handleKeyDown
-		cmp		edx, 0101h
-		je		handleKeyUp
+		;cmp		edx, 0101h
+		;je		handleKeyUp
 
     cmp     edx, 2
     je      handleDestroyMsg
@@ -248,26 +254,26 @@ handlePaintMsg:
 	xor rax, rax
 	ret
 	
-handleMouseMUp:
-	lea rcx, dKeyMap
-	mov byte ptr [rcx+4], 0
-	jmp handleMouseMove
+;handleMouseMUp:
+;	lea rcx, dKeyMap
+;	mov byte ptr [rcx+4], 0
+;	jmp handleMouseMove
 handleMouseMDown:
 	lea rcx, dKeyMap
 	mov byte ptr [rcx+4], 1
 	jmp handleMouseMove
-handleMouseRUp:
-	lea rcx, dKeyMap
-	mov byte ptr [rcx+2], 0
-	jmp handleMouseMove
+;handleMouseRUp:
+;	lea rcx, dKeyMap
+;	mov byte ptr [rcx+2], 0
+;	jmp handleMouseMove
 handleMouseRDown:
 	lea rcx, dKeyMap
 	mov byte ptr [rcx+2], 1
 	jmp handleMouseMove
-handleMouseLUp:
-	lea rcx, dKeyMap
-	mov byte ptr [rcx+1], 0
-	jmp handleMouseMove
+;handleMouseLUp:
+;	lea rcx, dKeyMap
+;	mov byte ptr [rcx+1], 0
+;	jmp handleMouseMove
 handleMouseLDown:
 	lea rcx, dKeyMap
 	mov byte ptr [rcx+1], 1
@@ -289,12 +295,12 @@ handleKeyDown:
 	mov byte ptr [rcx + rax], 1
     xor rax, rax
     ret
-handleKeyUp:
-	movzx rax, r8b
-	lea rcx, dKeyMap
-	mov byte ptr [rcx + rax], 0
-    xor rax, rax
-    ret
+;handleKeyUp:
+;	movzx rax, r8b
+;	lea rcx, dKeyMap
+;	mov byte ptr [rcx + rax], 0
+;   xor rax, rax
+;   ret
 
 handleDestroyMsg:
     sub rsp, 20h
