@@ -8,6 +8,8 @@ DrawTextW PROTO
 SetTextColor PROTO
 SetBkMode PROTO
 
+ConsoleRender PROTO
+
 EndPaint PROTO 
 
 U64ToWStr PROTO
@@ -97,7 +99,9 @@ TestRender PROC
 		mov rcx, OFFSET dSoldierSprite
 		call ReleaseSpriteHDC
 
-
+	; [DEBUG] render console
+		mov rcx, r12 ; hdc
+		call ConsoleRender
 	; [DEBUG] render performance stuff
 		; config system vars
 			mov rdx, 00000FFffh ; color

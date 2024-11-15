@@ -1,3 +1,9 @@
+
+DrawTextW PROTO
+SetTextColor PROTO
+SetBkMode PROTO
+
+
 .data
 
 dConsoleBuffer db 4096 dup(0) ; NOTE: this is for a WIDE str, so theres only 2048 characters of space
@@ -24,11 +30,13 @@ ConsolePrint PROC
 
 	skip_str_join:
 	mov rdx, dConsolePosition
+	xor rsi, rsi
 	str_copy:
-		mov ax, word ptr [rcx+rdx]
+		mov ax, word ptr [rcx+rsi]
 		mov word ptr [r10+rdx], ax
 		; check to see if we reached the end of the buffer and make more room if need be
 			add rdx, 2
+			add rsi, 2
 			cmp rdx, 4096
 			je pop_console
 		return_from_pop_console:
@@ -57,9 +65,36 @@ ConsolePrint PROC
 	jmp return_from_pop_console
 ConsolePrint ENDP
 
-
+; rcx: hdc
 ConsoleRender PROC
+	; config local vars
+		push r12
+		mov r12, rcx
+		sub rsp, 20h
+	; config system vars
+		mov rdx, 0000000ffh ; color
+		;mov rcx, rcx ; hdc (passes straight through)
+		call SetTextColor
+		mov rdx, 1 ; transparent
+		mov rcx, r12 ; hdc
+		call SetBkMode
 	; render everything to text box
+		push 0 ; ALIGN
+		push 240 ; bottom
+		push 210 ; right
+		push 40 ; top
+		push 10 ; left
+		mov r9, rsp; rect ptr
+		push 00000100h ; format 
+		mov r8, -1 ; char count 
+		lea rdx, dConsoleBuffer ; wstr ptr
+		mov rcx, r12 ; hdc
+		sub rsp, 20h
+		call DrawTextW
+	; cleanup & return
+		add rsp, 70h
+		pop r12
+		ret
 ConsoleRender ENDP
 
 END

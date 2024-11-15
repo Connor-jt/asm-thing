@@ -20,6 +20,7 @@ LoadImageW PROTO
 
 extern LoadSpriteLibrary : proc ; sprite library entry
 extern TestRender : proc ; render entry
+ConsolePrint PROTO 
 ; input imports
 extern FlushInputs : proc
 extern dKeyMap : db
@@ -31,6 +32,10 @@ extern dMouseY : dw
 cWindowClassName dw 'E','x','W','i','n','C','l','a','s','s', 0
 cWindowName dw 'E','x','W','i','n','N','a','m','e', 0
 cCursorPath dw 'r','e','s','/','i','c','o','n','s','/','c','u','r','s','o','r','/','1','.','c','u','r', 0
+
+cHelloStr dw 'H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd', '!', 0
+cCyaStr dw 'C','y','a',' ','W','o','r','l','d','!',0
+
 ; constant runtimes
 dTimeFequency dq 0
 public dTimeFequency
@@ -53,6 +58,14 @@ main PROC
 	sub rsp, 28h	; align stack + 'shadow space'
 	; load app resources
 		call LoadSpriteLibrary
+	; [DEBUG] print out hello world
+		mov rdx, 1
+		lea rcx, cHelloStr
+		call ConsolePrint
+	; [DEBUG] print out secondary info
+		mov rdx, 1
+		lea rcx, cCyaStr
+		call ConsolePrint
 
 	; get timestamp frrequency & set base time
 		mov rcx, OFFSET dTimeFequency
