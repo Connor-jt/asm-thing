@@ -148,6 +148,7 @@
     <MASM Include="SRC\actors\SpriteLibrary.asm" />
     <MASM Include="SRC\input\InputBank.asm" />
     <MASM Include="SRC\Render.asm" />
+    <MASM Include="SRC\UI\ConsoleUI.asm" />
     <MASM Include="SRC\utils.asm" />
   </ItemGroup>
   <ItemGroup>
