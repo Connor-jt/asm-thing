@@ -78,17 +78,17 @@ DebugUIRender PROC
 		lea rcx, cPrintFrameStr
 		call DebugUIDrawLabel
 	; draw fps
-		mov r8, 140
+		mov r8, 40
 		mov rdx, dLastFrameCount
 		lea rcx, cPrintFpsStr
 		call DebugUIDrawLabel
 	; draw draw time
-		mov r8, 260
+		mov r8, 60
 		mov rdx, dDrawTime
 		lea rcx, cPrintPaintStr
 		call DebugUIDrawLabel
 	; draw idle time
-		mov r8, 380
+		mov r8, 80
 		mov rdx, dIdleTime
 		lea rcx, cPrintIdleStr
 		call DebugUIDrawLabel

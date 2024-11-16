@@ -75,11 +75,11 @@ ConsoleRender PROC
 		;mov rcx, rcx ; hdc (passes straight through)
 		call SetTextColor
 	; render everything to text box
-		push 0 ; ALIGN
-		push 240 ; bottom
-		push 210 ; right
-		push 40 ; top
-		push 10 ; left
+		sub rsp, 18h
+		mov dword ptr [rsp+12], 240 ; bottom
+		mov dword ptr [rsp+8], 210 ; right
+		mov dword ptr [rsp+4], 40 ; top
+		mov dword ptr [rsp], 10 ; left
 		mov r9, rsp; rect ptr
 		push 00000100h ; format 
 		mov r8, -1 ; char count 
@@ -88,7 +88,7 @@ ConsoleRender PROC
 		sub rsp, 20h
 		call DrawTextW
 	; cleanup & return
-		add rsp, 70h
+		add rsp, 60h
 		pop r12
 		ret
 ConsoleRender ENDP
