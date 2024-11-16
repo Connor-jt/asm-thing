@@ -44,6 +44,10 @@ dLastTime dq 0
 dCurrTime dq 0
 dFrameDebt dq 0
 
+; debug data
+dIdleTime dq 0
+public dIdleTime
+
 .data?
 dHInstance dq ?
 dWindowClass db 80 dup(?)
@@ -187,6 +191,7 @@ main PROC
 		sub rdx, rax
 		jl skip_sleep ; immediately jump to next tick if we didnt make it through this one in time
 		mov qword ptr [rsp+28h], rdx
+		mov dIdleTime, rdx 
 		mov rcx, rdx
 		call Sleep
 	; measure time spent sleeping and note it down as debt time
@@ -206,6 +211,7 @@ main PROC
 	jmp messageLoop
 
 	skip_sleep: 
+		mov dIdleTime, 0 
 		mov dFrameDebt, 0
 		mov rcx, OFFSET dLastTime
 		call QueryPerformanceCounter

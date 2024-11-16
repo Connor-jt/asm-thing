@@ -12,7 +12,10 @@ ConsoleRender PROTO
 
 EndPaint PROTO 
 
-U64ToWStr PROTO
+DebugUITickEnd PROTO
+DebugUITick PROTO
+DebugUIRender PROTO
+
 
 extern RenderSprite : proc ; sprite entry
 extern ReleaseSpriteHDC : proc ; sprite entry
@@ -21,14 +24,6 @@ extern dSoldierSprite : db ; not sure if this is correct or not??
 extern dTimeFequency : dq
 
 .data
-; FPS counting logic
-dLastTime dq 0
-dCurrTime dq 0
-
-dDrawTime dq 0
-
-dLastFrameCount dq 0
-dFrameCount dq 0
 
 .code
 
@@ -44,37 +39,7 @@ TestRender PROC
 		add r13, 20h
 		mov r14, rcx ; store hwnd 
 	; [DEBUG] FPS tracking stuff
-		; get latest time interval
-			mov r12, dCurrTime
-			mov rcx, OFFSET dCurrTime
-			call QueryPerformanceCounter
-		; get time (microseconds) since last frame
-			mov rax, dCurrTime
-			sub rax, r12
-			mov rcx, 1000000
-			mul rcx
-			mov rcx, dTimeFequency
-			mov rdx, 0
-			div rcx
-			mov dDrawTime, rax
-		; fetch miliseconds since last FPS counter refresh
-			mov rax, dCurrTime
-			sub rax, dLastTime
-			mov rcx, 1000
-			mul rcx
-			mov rcx, dTimeFequency
-			mov rdx, 0
-			div rcx
-		; if milisec elasped is less than 1000, skip
-			cmp rax, 1000
-			jl fps_tracking_end
-		; else reset fps counter
-			mov rax, dFrameCount
-			mov dLastFrameCount, rax
-			mov dFrameCount, 0
-			mov rax, dCurrTime
-			mov dLastTime, rax
-	fps_tracking_end:
+		call DebugUITick
 
 	; begin paint
 		mov rdx, r13   ; paintstruct*
@@ -104,79 +69,14 @@ TestRender PROC
 		mov rcx, r12 ; hdc
 		call ConsoleRender
 	; [DEBUG] render performance stuff
-		; config system vars
-			mov rdx, 00000FFffh ; color
-			mov rcx, r12 ; hdc
-			call SetTextColor
-		; config wstr buffer
-			mov rbx, rsp
-			sub rsp, 40h
-			sub rbx, 6
-		; draw time
-			mov rdx, rbx
-			mov rcx, dDrawTime
-			call U64ToWStr
-			; append to str: " ps"
-				mov word ptr [rbx-2], 20h
-				mov word ptr [rbx],   70h
-				mov word ptr [rbx+2], 73h
-				mov word ptr [rbx+4],  0h
-			push 0 ; PADDING
-			push 100 ; bottom
-			push 80 ; right
-			push 40 ; top
-			push 10 ; left
-			mov r9, rsp; rect ptr
-			push 00000100h ; format 
-			mov r8, -1 ; char count 
-			mov rdx, rax ; wstr ptr
-			;mov rdx, OFFSET cTesterr ; wstr ptr
-			mov rcx, r12 ; hdc
-			sub rsp, 20h
-			call DrawTextW
-			add rsp, 50h
-		; fps
-			mov rdx, rbx
-			mov rcx, dLastFrameCount
-			call U64ToWStr
-			; append to str: " ps"
-				mov word ptr [rbx-2], 66h
-				mov word ptr [rbx],   70h
-				mov word ptr [rbx+2], 73h
-				mov word ptr [rbx+4],  0h
-			push 0 ; PADDING
-			push 140 ; bottom
-			push 80 ; right
-			push 120 ; top
-			push 210 ; left
-			mov r9, rsp; rect ptr
-			push 00000100h ; format 
-			mov r8, -1 ; char count 
-			mov rdx, rax ; wstr ptr
-			;mov rdx, OFFSET cTesterr ; wstr ptr
-			mov rcx, r12 ; hdc
-			sub rsp, 20h
-			call DrawTextW
-			add rsp, 50h
-		; reset vars
-			add rsp, 40h
+		call DebugUIRender
 
 	; end paint
 		mov rdx, r13   ; paintstruct*
 		mov rcx, r14 ; hwnd
 		call EndPaint
-	; [DEBUG] log performance stuff
-		add dFrameCount, 1
-		mov rcx, OFFSET dDrawTime
-		call QueryPerformanceCounter
-		mov rax, dDrawTime
-		sub rax, dCurrTime
-		mov rcx, 1000000
-		mul rcx
-		mov rcx, dTimeFequency
-		mov rdx, 0
-		div rcx
-		mov dDrawTime, rax
+	; [DEBUG] log frame render time
+		call DebugUITickEnd
 	; return
 		add rsp, 78h ; clear shadow space
 		pop rbx
