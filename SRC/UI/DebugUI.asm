@@ -11,8 +11,8 @@ extern dTimeFequency : dq
 extern dIdleTime : dq
 
 .data
-cPrintFrameStr dw 'F','r','a','m','e',' ','T','i','m','e',' ','(','p','s',')',0
-cPrintPaintStr dw 'D','r','a','w',' ','T','i','m','e',' ','(','p','s',')',0
+cPrintFrameStr dw 'F','r','a','m','e',' ','T','i','m','e',' ','(','m','s',')',0
+cPrintPaintStr dw 'D','r','a','w',' ','T','i','m','e',' ','(','m','s',')',0
 cPrintIdleStr dw 'I','d','l','e',' ','T','i','m','e',' ','(','m','s',')',0
 cPrintFpsStr dw 'F','P','S',0
 
@@ -64,39 +64,6 @@ DebugUITick PROC
 		ret
 DebugUITick ENDP
 
-; r14: hwnd (pass through)
-; r12: hdc (pass through)
-DebugUIRender PROC
-	; config system vars
-		sub rsp, 28h
-		mov rdx, 00000FFffh ; color
-		mov rcx, r12 ; hdc
-		call SetTextColor
-	; draw frame time
-		mov r8, 20
-		mov rdx, dFrameTime
-		lea rcx, cPrintFrameStr
-		call DebugUIDrawLabel
-	; draw fps
-		mov r8, 40
-		mov rdx, dLastFrameCount
-		lea rcx, cPrintFpsStr
-		call DebugUIDrawLabel
-	; draw draw time
-		mov r8, 60
-		mov rdx, dDrawTime
-		lea rcx, cPrintPaintStr
-		call DebugUIDrawLabel
-	; draw idle time
-		mov r8, 80
-		mov rdx, dIdleTime
-		lea rcx, cPrintIdleStr
-		call DebugUIDrawLabel
-	; reset vars
-		add rsp, 28h
-		ret
-DebugUIRender ENDP
-
 DebugUITickEnd PROC ;NOTE: this is called after the render function
 	sub rsp, 28h
 	; measure time since debugUI tick start
@@ -115,6 +82,50 @@ DebugUITickEnd PROC ;NOTE: this is called after the render function
 		add rsp, 28h
 		ret
 DebugUITickEnd ENDP
+
+
+; r14: hwnd (pass through)
+; r12: hdc (pass through)
+DebugUIRender PROC
+	; config system vars
+		sub rsp, 28h
+		mov rdx, 00085FF00h ; color ; #00ff85
+		mov rcx, r12 ; hdc
+		call SetTextColor
+	; draw fps
+		mov r8, 20
+		mov rdx, dLastFrameCount
+		lea rcx, cPrintFpsStr
+		call DebugUIDrawLabel
+	; draw frame time (div by 1000 to convert to ms)
+		mov rax, dFrameTime
+		mov rdx, 0
+		mov rcx, 1000
+		div rcx
+
+		mov r8, 40
+		mov rdx, rax
+		lea rcx, cPrintFrameStr
+		call DebugUIDrawLabel
+	; draw draw time (div by 1000 to convert to ms)
+		mov rax, dDrawTime
+		mov rdx, 0
+		mov rcx, 1000
+		div rcx
+
+		mov r8, 60
+		mov rdx, rax
+		lea rcx, cPrintPaintStr
+		call DebugUIDrawLabel
+	; draw idle time
+		mov r8, 80
+		mov rdx, dIdleTime
+		lea rcx, cPrintIdleStr
+		call DebugUIDrawLabel
+	; reset vars
+		add rsp, 28h
+		ret
+DebugUIRender ENDP
 
 ; r14: hwnd (pass through)
 ; r12: hdc (pass through)
@@ -164,7 +175,7 @@ DebugUIDrawLabel PROC
 
 	; adjust drawing position
 		mov eax, dword ptr [r13]
-		add eax, 100
+		add eax, 120
 		mov dword ptr [r13], eax
 	; convert number into string
 		mov rdx, rsp
