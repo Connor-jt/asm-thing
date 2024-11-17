@@ -24,13 +24,12 @@ ConsolePrint PROC
 	; join text with either newline or space
 		cmp rdx, 1
 		je join_with_newline
-		mov word ptr [r10+rax], 32
-		jmp skip_str_join
-	join_with_newline:
-		mov word ptr [r10+rax], 10
+			mov word ptr [r10+rax], 32
+			jmp skip_str_join
+		join_with_newline:
+			mov word ptr [r10+rax], 10
+		skip_str_join:
 
-
-	skip_str_join:
 	mov rdx, dConsolePosition
 	xor rsi, rsi
 	str_copy:
@@ -41,12 +40,12 @@ ConsolePrint PROC
 			add rsi, 2
 			cmp rdx, 4096
 			je pop_console
-		return_from_pop_console:
+			return_from_pop_console:
 		; check to see if last character copied was a null terminator
 			cmp ax, 0
 			je finish_copy
+		jmp str_copy
 
-	jmp str_copy
 	finish_copy:
 	mov dConsolePosition, rdx
 	ret
@@ -64,6 +63,7 @@ ConsolePrint PROC
 		add rdi, 8
 		cmp rdi, 2048
 		jne copy_bytes
+	mov rdx, 2048 ; make sure we reset the writing point
 	jmp return_from_pop_console
 ConsolePrint ENDP
 
