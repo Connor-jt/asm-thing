@@ -8,6 +8,9 @@ SetTextColor PROTO
 dConsoleBuffer db 4096 dup(0) ; NOTE: this is for a WIDE str, so theres only 2048 characters of space
 dConsolePosition dq 0
 
+dClearNextTicks dq 0 
+
+
 .code
 ; rdx: use newline
 ; rcx: str ptr
@@ -70,10 +73,21 @@ ConsoleRender PROC
 		push r12
 		mov r12, rcx
 		sub rsp, 20h
+
+	; process 
 	; config system vars
 		mov rdx, 0000000ffh ; color
 		;mov rcx, rcx ; hdc (passes straight through)
 		call SetTextColor
+	; calculate where our start point is for the string
+		mov rax, dConsolePosition
+		cmp rax, 2048
+		jle  use_console_buffer_begin
+			sub rax, 2048
+			jmp finish_buffer_origin_point
+		use_console_buffer_begin:
+			mov rax, 0
+		finish_buffer_origin_point:
 	; render everything to text box
 		sub rsp, 18h
 		mov dword ptr [rsp+12], 240 ; bottom
@@ -84,6 +98,7 @@ ConsoleRender PROC
 		push 00000100h ; format 
 		mov r8, -1 ; char count 
 		lea rdx, dConsoleBuffer ; wstr ptr
+		add rdx, rax
 		mov rcx, r12 ; hdc
 		sub rsp, 20h
 		call DrawTextW

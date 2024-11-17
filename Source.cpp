@@ -9,6 +9,7 @@
 //void doody() {
 //    char buffer[_MAX_U64TOSTR_BASE2_COUNT];
 //    int r;
+//    DT_BOTTOM;
 //    RECT var = {};
 //    IMAGE_CURSOR;
 //    PM_REMOVE;
