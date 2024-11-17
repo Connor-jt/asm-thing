@@ -7,6 +7,7 @@ SetTextColor PROTO
 
 dConsoleBuffer db 4096 dup(0) ; NOTE: this is for a WIDE str, so theres only 2048 characters of space
 dConsolePosition dq 0
+dConsoleHasHadReset db 0
 
 dClearNextTicks dq 0 
 
@@ -64,6 +65,7 @@ ConsolePrint PROC
 		cmp rdi, 2048
 		jne copy_bytes
 	mov rdx, 2048 ; make sure we reset the writing point
+	mov dConsoleHasHadReset, 1 ; so we know that the first byte of this buffer is probably not actually the start of a new word
 	jmp return_from_pop_console
 ConsolePrint ENDP
 
@@ -73,21 +75,29 @@ ConsoleRender PROC
 		push r12
 		mov r12, rcx
 		sub rsp, 20h
-
-	; process 
 	; config system vars
-		mov rdx, 000d0d0ffh ; color
+		mov rdx, 0004040ffh ; color
 		;mov rcx, rcx ; hdc (passes straight through)
 		call SetTextColor
 	; calculate where our start point is for the string
+		lea rdx, dConsoleBuffer ; wstr ptr
 		mov rax, dConsolePosition
+		; if the string is too long, then max out its length
 		cmp rax, 2048
 		jle use_console_buffer_begin
 			sub rax, 2048
-			jmp finish_buffer_origin_point
+			jmp look_for_next_newline
 		use_console_buffer_begin:
 			mov rax, 0
-		finish_buffer_origin_point:
+			cmp dConsoleHasHadReset, 0
+			je finish_buffer_start_point
+		; if we dont start at the start of the buffer, then look for the nearest newline character to print our string from
+		look_for_next_newline:
+			mov cl, byte ptr [rdx+rax]
+			add rax, 2
+			cmp cl, 10	
+			jne look_for_next_newline
+		finish_buffer_start_point:
 	; render everything to text box
 		sub rsp, 18h
 		mov dword ptr [rsp+12], 240 ; bottom
@@ -97,7 +107,6 @@ ConsoleRender PROC
 		mov r9, rsp; rect ptr
 		push 00000100h ; format 
 		mov r8, -1 ; char count 
-		lea rdx, dConsoleBuffer ; wstr ptr
 		add rdx, rax
 		mov rcx, r12 ; hdc
 		sub rsp, 20h
