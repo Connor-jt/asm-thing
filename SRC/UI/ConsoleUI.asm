@@ -2,6 +2,7 @@
 DrawTextW PROTO
 SetTextColor PROTO
 
+U64ToWStr PROTO
 
 .data
 
@@ -11,11 +12,15 @@ dConsoleHasHadReset db 0
 
 dClearNextTicks dq 0 
 
+dConsoleWriteCount dq 0
+public dConsoleWriteCount
+
 
 .code
 ; rdx: use newline
 ; rcx: str ptr
 ConsolePrint PROC
+	inc dConsoleWriteCount
 	lea r10, dConsoleBuffer
 	; if we already have data in the buffer, replace the null terminator with a joiner character
 		cmp dConsolePosition, 0
@@ -68,6 +73,22 @@ ConsolePrint PROC
 	mov dConsoleHasHadReset, 1 ; so we know that the first byte of this buffer is probably not actually the start of a new word
 	jmp return_from_pop_console
 ConsolePrint ENDP
+
+; rcx: num
+ConsolePrintNumber PROC
+	; convert number into string
+		mov rdx, rsp
+		sub rsp, 38h ; + 8 alignment
+		;mov rcx, rcx (pass through)
+		call U64ToWStr
+	; run print function
+		mov rdx, 0
+		mov rcx, rax
+		call ConsolePrint
+	; return
+		add rsp, 38h
+		ret
+ConsolePrintNumber ENDP
 
 ; rcx: hdc
 ConsoleRender PROC

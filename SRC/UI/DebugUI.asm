@@ -9,12 +9,14 @@ U64ToWStr PROTO
 
 extern dTimeFequency : dq
 extern dIdleTime : dq
+extern dConsoleWriteCount : dq 
 
 .data
 cPrintFrameStr dw 'F','r','a','m','e',' ','T','i','m','e',' ','(','m','s',')',0
 cPrintPaintStr dw 'D','r','a','w',' ','T','i','m','e',' ','(','m','s',')',0
 cPrintIdleStr dw 'I','d','l','e',' ','T','i','m','e',' ','(','m','s',')',0
 cPrintFpsStr dw 'F','P','S',0
+cPrintLogStr dw 'L','o','g',' ','c','o','u','n','t',0
 
 dLastTime dq 0
 dCurrTime dq 0
@@ -121,6 +123,11 @@ DebugUIRender PROC
 		mov r8, 80
 		mov rdx, dIdleTime
 		lea rcx, cPrintIdleStr
+		call DebugUIDrawLabel
+	; draw log count
+		mov r8, 120
+		mov rdx, dConsoleWriteCount
+		lea rcx, cPrintLogStr
 		call DebugUIDrawLabel
 	; reset vars
 		add rsp, 28h
