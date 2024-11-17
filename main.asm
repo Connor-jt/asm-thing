@@ -36,6 +36,9 @@ cCursorPath dw 'r','e','s','/','i','c','o','n','s','/','c','u','r','s','o','r','
 cHelloStr dw 'H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd', '!', 0
 cCyaStr dw 'C','y','a',' ','W','o','r','l','d','!',0
 
+cLMouseDownStr dw 'L','e','f','t',' ','m','o','u','s','e',' ','w','a','s',' ','p','r','e','s','s','e','d','!','!',0
+cSpaceBarDownStr dw 'S','p','a','c','e',' ','b','a','r',' ','w','a','s',' ','p','r','e','s','s','e','d','!','!',0
+
 ; constant runtimes
 dTimeFequency dq 0
 public dTimeFequency
@@ -161,6 +164,27 @@ main PROC
 	jmp messageLoop
 	
 	run_tick: ; so far we just do a redraw call and thats it
+		; [DEBUG] fill in the console buffer with random key inputs
+			; check mouse left down
+			lea rcx, dKeyMap
+			mov al, byte ptr [rcx+1]
+			cmp al, 0
+			je block1
+				mov rdx, 1
+				lea rcx, cLMouseDownStr
+				call ConsolePrint
+			block1:
+			; check space bar down
+			lea rcx, dKeyMap
+			mov al, byte ptr [rcx+32]
+			cmp al, 0
+			je block2
+				mov rdx, 1
+				lea rcx, cSpaceBarDownStr
+				call ConsolePrint
+			block2:
+		; end debug
+
 		mov r9, 101h
 		mov r8, 0
 		mov rdx, 0

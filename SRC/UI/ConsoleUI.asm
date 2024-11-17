@@ -76,13 +76,13 @@ ConsoleRender PROC
 
 	; process 
 	; config system vars
-		mov rdx, 0000000ffh ; color
+		mov rdx, 000d0d0ffh ; color
 		;mov rcx, rcx ; hdc (passes straight through)
 		call SetTextColor
 	; calculate where our start point is for the string
 		mov rax, dConsolePosition
 		cmp rax, 2048
-		jle  use_console_buffer_begin
+		jle use_console_buffer_begin
 			sub rax, 2048
 			jmp finish_buffer_origin_point
 		use_console_buffer_begin:
