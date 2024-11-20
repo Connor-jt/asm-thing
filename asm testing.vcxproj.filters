@@ -42,6 +42,9 @@
     <MASM Include="SRC\UI\DebugUI.asm">
       <Filter>Source Files</Filter>
     </MASM>
+    <MASM Include="SRC\actors\Actor.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">

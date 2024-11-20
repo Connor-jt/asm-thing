@@ -1,3 +1,5 @@
+ActorRender PROTO
+
 .data
 
 dActorList db 120000 dup(0) ; 24 bytes x 5000 actors
@@ -50,7 +52,7 @@ GetActorStats ENDP
 ; r8: y coord
 ; rdx: x coord
 ; rcx: unit type
-CreateActor PROC
+ActorBankCreate PROC
 	; get new actor address
 		lea r10, dActorList
 		add r10, dLastActorIndex
@@ -70,10 +72,67 @@ CreateActor PROC
 	; complete
 		mov rax, r10
 		ret
-CreateActor ENDP
+ActorBankCreate ENDP
+
+; no inputs
+ActorBankTick PROC
+	sub rsp, 8
+	push r12 ; ptr to current actor
+	push r13 ; last address
+	lea r12, dActorList 
+	mov r13, r12
+	add r13, dLastActorIndex
+	loop:
+		; break if we reached the last valid index
+			cmp r12, r13
+			je loop_end
+		; if current actor is valid
+			test dword ptr [r12], 0100000h
+			jz block3
+				
+			block3:
+		; next iteration
+			add r12, 24
+			jmp loop
+	loop_end:
+
+	pop r13
+	pop r12
+	add rsp, 8
+	ret
+ActorBankTick ENDP
+
+; rcx: hdc 
+ActorBankRender PROC
+	sub rsp, 8
+	push r12 ; ptr to current actor
+	push r13 ; last address
+	lea r12, dActorList 
+	mov r13, r12
+	add r13, dLastActorIndex
+	loop:
+		; break if we reached the last valid index
+			cmp r12, r13
+			je loop_end
+		; if current actor is valid
+			test dword ptr [r12], 0100000h
+			jz block4
+				
+			block4:
+		; next iteration
+			add r12, 24
+			jmp loop
+	loop_end:
+
+	pop r13
+	pop r12
+	add rsp, 8
+	ret
+ActorBankRender ENDP
+
+
 
 ; release actor function
 ; actor ptr from handle function
 
-; render function
 END
