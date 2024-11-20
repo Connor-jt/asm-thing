@@ -24,7 +24,7 @@
     <MASM Include="SRC\Render.asm">
       <Filter>Source Files</Filter>
     </MASM>
-    <MASM Include="SRC\actors\SpriteLibrary.asm">
+    <MASM Include="SRC\actors\SpriteBank.asm">
       <Filter>Source Files</Filter>
     </MASM>
     <MASM Include="SRC\utils.asm">

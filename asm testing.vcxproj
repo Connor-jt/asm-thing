@@ -146,7 +146,7 @@
     <MASM Include="SRC\actors\Actor.asm" />
     <MASM Include="SRC\actors\ActorBank.asm" />
     <MASM Include="SRC\actors\Sprite.asm" />
-    <MASM Include="SRC\actors\SpriteLibrary.asm" />
+    <MASM Include="SRC\actors\SpriteBank.asm" />
     <MASM Include="SRC\input\InputBank.asm" />
     <MASM Include="SRC\Render.asm" />
     <MASM Include="SRC\UI\ConsoleUI.asm" />
