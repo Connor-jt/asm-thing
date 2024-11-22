@@ -24,6 +24,11 @@ extern dSoldierSprite : db ; not sure if this is correct or not??
 extern dTimeFequency : dq
 
 .data
+dWinX dd 0
+dWinY dd 0
+public dWinX
+public dWinY
+
 
 .code
 
@@ -40,6 +45,15 @@ TestRender PROC
 		mov r14, rcx ; store hwnd 
 	; [DEBUG] FPS tracking stuff
 		call DebugUITick
+	; read window size
+		sub rsp, 10h
+		mov rdx, rsp
+		mov rcx, r14
+		sub rsp, 20h
+		call GetClientRect 
+		mov dWinX, dword ptr [rsp+28h]
+		mov dWinY, dword ptr [rsp+2Ch]
+		add rsp, 30h
 
 	; begin paint
 		mov rdx, r13   ; paintstruct*

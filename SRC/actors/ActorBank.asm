@@ -76,6 +76,8 @@ ActorBankCreate ENDP
 
 ; no inputs
 ActorBankTick PROC
+	ret ; do nothing here right now
+	
 	sub rsp, 8
 	push r12 ; ptr to current actor
 	push r13 ; last address
@@ -117,7 +119,12 @@ ActorBankRender PROC
 		; if current actor is valid
 			test dword ptr [r12], 0100000h
 			jz block4
+
+				; fetch reference to the sprite
+				
 				; we need to calculate the offeset onto the sprite
+
+				
 
 				; so X = state_index * size
 				; and y = state * size

@@ -47,6 +47,8 @@ dLastTime dq 0
 dCurrTime dq 0
 dFrameDebt dq 0
 
+
+
 ; debug data
 dIdleTime dq 0
 public dIdleTime

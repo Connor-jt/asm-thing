@@ -54,6 +54,14 @@ LoadSprite PROC
 		ret
 LoadSprite ENDP
 
+
+
+; rsp+12: sprite_y_width
+; rsp+8: sprite_y
+; rsp+4: sprite_x_width
+; rsp+0: sprite_x
+; r9: y
+; r8: x
 ; rcx: hdc
 ; rdx: sprite_object
 RenderSprite PROC
