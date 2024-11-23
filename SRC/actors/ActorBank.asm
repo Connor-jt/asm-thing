@@ -119,16 +119,9 @@ ActorBankRender PROC
 		; if current actor is valid
 			test dword ptr [r12], 0100000h
 			jz block4
-
-				; fetch reference to the sprite
-				
-				; we need to calculate the offeset onto the sprite
-
-				
-
-				; so X = state_index * size
-				; and y = state * size
-				; we also need to figure out which sprite we are using???
+				; r12: actor ptr (pass through)
+				; rcx: hdc (pass through)
+				call DrawActorSprite
 			block4:
 		; next iteration
 			add r12, 24

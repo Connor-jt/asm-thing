@@ -121,27 +121,27 @@ SetSpriteDevice ENDP
 ;		ret
 ;RenderSprite ENDP
 
-; r12: hdc (pass through)
-; rcx: actor ptr
+; r12: actor ptr (paas through)
+; rcx: hdc
 DrawActorSprite PROC
 	push r13
 	push r14
 	push r15
+	; rcx : hdc
 	; rax : temp
 	; rdx : temp
 	; rsi : temp
 	; rdi : temp
-	; rcx : actor ptr
+	; r12 : actor ptr
 	; r8 : left overlap
 	; r9 : right overlap
 	; r10 : top overlap
 	; r11 : bot overlap
-	; r12 : hdc
 	; r13 : sprite ptr
 	; r14 : pox Y (adjusted)
 	; r15 : pos X (adjusted)
 	; get actor type sprite address
-		mov rax, dword ptr [rcx] 
+		mov rax, dword ptr [r12] 
 		shr rax, 21 ; rshift the unit type
 		xor rdx, rdx
 		mov r13, 28
@@ -163,8 +163,8 @@ DrawActorSprite PROC
 		mov rax, dword ptr [r13+18h]
 		shr rax, 1
 	; calc actor screen position
-		mov r15, dword ptr [rcx+8] 
-		mov r14, dword ptr [rcx+12]
+		mov r15, dword ptr [r12+8] 
+		mov r14, dword ptr [r12+12]
 		sub r15, rax ; x 
 		sub r14, rax ; y
 		; add in screen position !!!
@@ -238,7 +238,7 @@ DrawActorSprite PROC
 		sub rsp, 16
 	; get actors current sprite frame
 		xor rax, rax
-		mov al, byte ptr [rcx+5]
+		mov al, byte ptr [r12+5]
 		mov cl, al
 		and al, 7 ; al: state index
 		shr cl, 6 ; cl: state
@@ -266,15 +266,15 @@ DrawActorSprite PROC
 
 		push rax ; src y
 		push rdi ; src x
-		;mov rcx, qword ptr [r13+10h] ; + bitmap hdmem
-		;push rcx ; hdc src
+		;mov rdx, qword ptr [r13+10h] ; + bitmap hdmem
+		;push rdx ; hdc src
 		push qword ptr [r13+10h] ; hdc src
 
 		push r11 ; height
 		;mov r9, r9 ; width (redundant mov)
 		mov r8, r14 ; y
 		mov rdx, r15 ; x
-		mov rcx, r12 ; hdc
+		;mov rcx, rcx ; hdc (redundant mov)
 		sub rsp, 20h
 		call MaskBlt
 		add rsp, 60h
