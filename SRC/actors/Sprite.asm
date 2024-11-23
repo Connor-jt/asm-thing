@@ -235,10 +235,10 @@ DrawActorSprite PROC
 	; update position values to use overlap values
 		add r15, r18 ; x
 		add r14, r10 ; y
-		sub rsp, 16
 	; get actors current sprite frame
 		xor rax, rax
 		mov al, byte ptr [r12+5]
+		push rcx ; reserve extra temp register
 		mov cl, al
 		and al, 7 ; al: state index
 		shr cl, 6 ; cl: state
@@ -252,6 +252,7 @@ DrawActorSprite PROC
 		xor rdx, rdx
 		xor rax, rax
 		mov al, cl
+		pop rcx
 		mov rsi, dword ptr [r13+18h]
 		mul rsi
 		add rax, r10
@@ -275,9 +276,11 @@ DrawActorSprite PROC
 		mov r8, r14 ; y
 		mov rdx, r15 ; x
 		;mov rcx, rcx ; hdc (redundant mov)
+		mov r14, rcx ; preserve rcx
 		sub rsp, 20h
 		call MaskBlt
 		add rsp, 60h
+		mov rcx, r14
 	skip_draw:
 		pop r15
 		pop r14
