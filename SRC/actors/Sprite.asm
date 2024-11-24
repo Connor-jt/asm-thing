@@ -263,14 +263,10 @@ DrawActorSprite PROC
 		
 		push rax ; mask y
 		push rdi ; mask x
-		;mov rdx, qword ptr [r13+8] ; + maskmap 
-		;push rdx ; mask hdc src
 		push qword ptr [r13+8] ; mask hdc src
 
 		push rax ; src y
 		push rdi ; src x
-		;mov rdx, qword ptr [r13+10h] ; + bitmap hdmem
-		;push rdx ; hdc src
 		push qword ptr [r13+10h] ; hdc src
 
 		push r11 ; height

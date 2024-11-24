@@ -132,8 +132,13 @@ DebugUIRender PROC
 		lea rcx, cPrintLogStr
 		call DebugUIDrawLabel
 	; draw actor count
+		mov rax, dLastActorIndex
+		mov rdx, 0
+		mov rcx, 24
+		div rcx
+
 		mov r8, 140
-		mov rdx, dLastActorIndex
+		mov rdx, rax
 		lea rcx, cPrintActorStr
 		call DebugUIDrawLabel
 	; reset vars
