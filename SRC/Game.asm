@@ -3,8 +3,12 @@ extern dKeyMap : byte
 extern dMouseX : dword
 extern dMouseY : dword
 
+extern dCameraX : dword
+extern dCameraY : dword
+
 ConsolePrint PROTO
 ActorBankCreate PROTO
+CameraTick PROTO
 
 .data
 cLMouseDownStr word 'L','e','f','t',' ','m','o','u','s','e',' ','w','a','s',' ','p','r','e','s','s','e','d','!','!',0
@@ -15,6 +19,9 @@ cLMouseDownStr word 'L','e','f','t',' ','m','o','u','s','e',' ','w','a','s',' ',
 
 GameTick PROC
 	sub rsp, 8
+	; run camera related functions
+		call CameraTick
+
 	; check mouse left down
 		lea rcx, dKeyMap
 		mov al, byte ptr [rcx+1]
@@ -26,7 +33,9 @@ GameTick PROC
 				call ConsolePrint
 			; create actor
 				mov r8d, dMouseY
+				add r8d, dCameraY
 				mov edx, dMouseX
+				add edx, dCameraX
 				mov ecx, 0
 				call ActorBankCreate
 		block1:

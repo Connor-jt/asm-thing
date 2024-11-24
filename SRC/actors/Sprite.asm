@@ -8,8 +8,11 @@ MaskBlt PROTO
 extern dWinX : dword
 extern dWinY : dword
 
+extern dCameraX : dword
+extern dCameraY : dword
+
 extern dSoldierSprite : word 
-;
+
 
 .code
 
@@ -171,8 +174,9 @@ DrawActorSprite PROC
 		mov r14d, dword ptr [r12+12]
 		sub r15d, eax ; x 
 		sub r14d, eax ; y
-		; add in screen position !!!
-
+	; translate to local screen position
+		sub r15d, dCameraX
+		sub r14d, dCameraY
 	; validate whether sprite is on screen
 		; horizontal
 			xor r8d, r8d ; left overlap

@@ -147,6 +147,7 @@
     <MASM Include="SRC\actors\ActorBank.asm" />
     <MASM Include="SRC\actors\Sprite.asm" />
     <MASM Include="SRC\actors\SpriteBank.asm" />
+    <MASM Include="SRC\Camera.asm" />
     <MASM Include="SRC\Game.asm" />
     <MASM Include="SRC\input\InputBank.asm" />
     <MASM Include="SRC\Render.asm" />
