@@ -61,14 +61,14 @@ LoadSprite ENDP
 
 
 ; r13: sprite_object (pass through)
-; r12: hdc (pass through)
+; rcx: hdc
 SetSpriteDevice PROC
 	sub rsp, 28h
 	; if bitmap hdc mem is valid, skip
 		cmp qword ptr [r13+10h], 0
 		jne return
 		; create hdmem
-			mov rcx, r12 ; window hdc
+			;mov rcx, rcx ; window hdc (redundant)
 			call CreateCompatibleDC
 			mov qword ptr[r13+10h], rax ; store bitmap hdc mem
 		; load bitmap
@@ -176,7 +176,7 @@ DrawActorSprite PROC
 	; validate whether sprite is on screen
 		; horizontal
 			xor r8d, r8d ; left overlap
-			xor r9d, r9d ; right overlap
+			mov r9d, dword ptr [r13+18h] ; right overlap = sprite size
 			; vaidate left side
 				mov eax, r15d ; x pos
 				; if x < 0
@@ -202,12 +202,11 @@ DrawActorSprite PROC
 					; store size - overlap
 					mov edx, dWinX
 					sub edx, eax
-					mov r9d, dword ptr [r13+18h] ; sprite size
 					sub r9d, edx
 				block6:
 		; vertical
 			xor r10d, r10d ; top overlap
-			xor r11d, r11d ; bottom overlap
+			mov r11d, dword ptr [r13+18h] ; bottom overlap = sprite size
 			; vaidate left side
 				mov eax, r14d ; y pos
 				; if y < 0
@@ -233,7 +232,6 @@ DrawActorSprite PROC
 					; store size - overlap
 					mov edx, dWinY
 					sub edx, eax
-					mov r11d, dword ptr [r13+18h] ; sprite size
 					sub r11d, edx
 				block8:
 	; update position values to use overlap values

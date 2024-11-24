@@ -5,18 +5,20 @@ DeleteDC PROTO
 
 extern dWinX : dword
 extern dWinY : dword
+public dSoldierSprite
 
 .data
 cSoldierSprite word 's','d','.','b','m','p', 0
 cSoldierSpriteMask word 's','d','m','.','b','m','p', 0
 
-.data?
-dSoldierSprite byte 28 dup(?)	; 0x0 bitmap ptr
-							; 0x8 mask bitmap ptr
-							; 0x10 bitmap hdc
-							; 0x18 bitmap dimensions (1x4byte)
-public dSoldierSprite
+
 cSpriteCount dword 28 ; count * 28
+dSoldierSprite byte 28 dup(0)	; 0x0 bitmap ptr
+								; 0x8 mask bitmap ptr
+								; 0x10 bitmap hdc
+								; 0x18 bitmap dimensions (1x4byte)
+
+
 .code
 
 
@@ -59,8 +61,8 @@ ReleaseSpriteHDCs PROC
 			jmp lloop
 	return:
 		add rsp, 28h
-		push r13
-		push r12
+		pop r13
+		pop r12
 		ret
 ReleaseSpriteHDCs ENDP
 

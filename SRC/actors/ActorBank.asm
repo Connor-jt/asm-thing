@@ -53,7 +53,7 @@ GetActorStats ENDP
 
 ; r8d: y coord
 ; edx: x coord
-; rcx: unit type
+; ecx: unit type
 ActorBankCreate PROC
 	; get new actor address
 		lea r10, dActorList

@@ -27,7 +27,7 @@ GameTick PROC
 			; create actor
 				mov r8d, dMouseY
 				mov edx, dMouseX
-				mov rcx, 0
+				mov ecx, 0
 				call ActorBankCreate
 		block1:
 	; return
