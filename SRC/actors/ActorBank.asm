@@ -5,6 +5,8 @@ ActorRender PROTO
 dActorList db 120000 dup(0) ; 24 bytes x 5000 actors
 dLastActorIndex dq 0 ; index * 24
 dFirstFreeIndex dq 0 ; index * 24
+
+public dLastActorIndex
 ; Actor struct
 ;	0h, 4 : handle
 ;	4h, 2 : state

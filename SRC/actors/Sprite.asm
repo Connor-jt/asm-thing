@@ -288,19 +288,4 @@ DrawActorSprite PROC
 		ret
 DrawActorSprite ENDP
 
-; rcx: sprite_ptr
-ReleaseSpriteHDC PROC
-	; config locals
-		push r12
-		sub rsp, 20h
-		mov r12, rcx
-	; make cleanup call
-		mov rcx, qword ptr [r12+10h]
-		call DeleteDC
-		mov qword ptr [r12+10h], 0
-	; return
-		add rsp, 20h
-		pop r12
-		ret
-ReleaseSpriteHDC ENDP
 END

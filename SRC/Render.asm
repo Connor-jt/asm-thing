@@ -17,8 +17,10 @@ DebugUITick PROTO
 DebugUIRender PROTO
 
 
-extern RenderSprite : proc ; sprite entry
-extern ReleaseSpriteHDC : proc ; sprite entry
+ActorBankRender PROTO ; sprite entry
+ReleaseSpriteHDCs PROTO ; spritebank entry
+
+
 ; NOTE: temporary thing
 extern dSoldierSprite : db ; not sure if this is correct or not??
 extern dTimeFequency : dq
@@ -71,13 +73,11 @@ TestRender PROC
 		mov rcx, r12 ; hdc
 		call SetBkMode
 
-	; do paint things
-		mov rdx, OFFSET dSoldierSprite
+	; draw all actors
 		mov rcx, r12
-		call RenderSprite
-	; wipe all created devices
-		mov rcx, OFFSET dSoldierSprite
-		call ReleaseSpriteHDC
+		call ActorBankRender
+	; release draw actor resources
+		call ReleaseSpriteHDCs
 
 	; [DEBUG] render console
 		mov rcx, r12 ; hdc
