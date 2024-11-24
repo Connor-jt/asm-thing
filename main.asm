@@ -18,46 +18,45 @@ PeekMessageW PROTO
 Sleep PROTO
 LoadImageW PROTO
 
-extern LoadSpriteLibrary : proc ; sprite library entry
-extern TestRender : proc ; render entry
+LoadSpriteLibrary PROTO ; sprite library entry
+TestRender PROTO ; render entry
+GameTick PROTO
 ConsolePrint PROTO 
 ; input imports
-extern FlushInputs : proc
-extern dKeyMap : db
-extern dMouseX : dw
-extern dMouseY : dw
+FlushInputs PROTO
+extern dKeyMap : byte
+extern dMouseX : dword
+extern dMouseY : dword
 
 
 .data
-cWindowClassName dw 'E','x','W','i','n','C','l','a','s','s', 0
-cWindowName dw 'E','x','W','i','n','N','a','m','e', 0
-cCursorPath dw 'r','e','s','/','i','c','o','n','s','/','c','u','r','s','o','r','/','1','.','c','u','r', 0
+cWindowClassName word 'E','x','W','i','n','C','l','a','s','s', 0
+cWindowName word 'E','x','W','i','n','N','a','m','e', 0
+cCursorPath word 'r','e','s','/','i','c','o','n','s','/','c','u','r','s','o','r','/','1','.','c','u','r', 0
 
-cHelloStr dw 'H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd', '!', 0
-cCyaStr dw 'C','y','a',' ','W','o','r','l','d','!',0
+cHelloStr word 'H', 'e', 'l', 'l', 'o', ' ', 'W', 'o', 'r', 'l', 'd', '!', 0
+cCyaStr word 'C','y','a',' ','W','o','r','l','d','!',0
 
-cLMouseDownStr dw 'L','e','f','t',' ','m','o','u','s','e',' ','w','a','s',' ','p','r','e','s','s','e','d','!','!',0
-cSpaceBarDownStr dw 'S','p','a','c','e',' ','b','a','r',' ','w','a','s',' ','p','r','e','s','s','e','d','!','!',0
 
 ; constant runtimes
-dTimeFequency dq 0
+dTimeFequency qword 0
 public dTimeFequency
 
-dLastTime dq 0
-dCurrTime dq 0
-dFrameDebt dq 0
+dLastTime qword 0
+dCurrTime qword 0
+dFrameDebt qword 0
 
 
 
 ; debug data
-dIdleTime dq 0
+dIdleTime qword 0
 public dIdleTime
 
 .data?
-dHInstance dq ?
-dWindowClass db 80 dup(?)
-dMSG db 48 dup(?)
-dHwnd dq ?
+dHInstance qword ?
+dWindowClass byte 80 dup(?)
+dMSG byte 48 dup(?)
+dHwnd qword ?
 
 
 
@@ -165,37 +164,20 @@ main PROC
 	; return to process next message if we successfully processed a message (implying there will be more in the queue??)
 	jmp messageLoop
 	
-	run_tick: ; so far we just do a redraw call and thats it
-		; [DEBUG] fill in the console buffer with random key inputs
-			; check mouse left down
-			lea rcx, dKeyMap
-			mov al, byte ptr [rcx+1]
-			cmp al, 0
-			je block1
-				mov rdx, 1
-				lea rcx, cLMouseDownStr
-				call ConsolePrint
-			block1:
-			; check space bar down
-			lea rcx, dKeyMap
-			mov al, byte ptr [rcx+32]
-			cmp al, 0
-			je block2
-				mov rdx, 1
-				lea rcx, cSpaceBarDownStr
-				call ConsolePrint
-			block2:
-		; end debug
 
+
+	run_tick: ; so far we just do a redraw call and thats it
+		call GameTick
+	; render tick
 		mov r9, 101h
 		mov r8, 0
 		mov rdx, 0
 		mov rcx, dHwnd
 		call RedrawWindow
-
-	
 	; complete tick by flushing inputs
 		call FlushInputs
+
+
 
 	; get time past since last tick
 		mov rcx, OFFSET dCurrTime
@@ -324,12 +306,11 @@ handleMouseLDown:
 	mov byte ptr [rcx+1], 1
 	;jmp handleMouseMove ; redundant
 handleMouseMove:
-	xor rax, rax
 	mov eax, r9d
-	shr rax, 16
-	mov dMouseY, rax
-	movzx rax, r9w
-	mov dMouseX, rax
+	shr eax, 16
+	mov dMouseY, eax
+	movzx eax, r9w
+	mov dMouseX, eax
     xor rax, rax
     ret
 

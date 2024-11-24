@@ -4,6 +4,7 @@ QueryPerformanceCounter PROTO
 BeginPaint PROTO
 FillRect PROTO
 DrawTextW PROTO
+GetClientRect PROTO
 
 SetTextColor PROTO
 SetBkMode PROTO
@@ -22,12 +23,12 @@ ReleaseSpriteHDCs PROTO ; spritebank entry
 
 
 ; NOTE: temporary thing
-extern dSoldierSprite : db ; not sure if this is correct or not??
-extern dTimeFequency : dq
+extern dSoldierSprite : byte ; not sure if this is correct or not??
+extern dTimeFequency : qword
 
 .data
-dWinX dd 0
-dWinY dd 0
+dWinX dword 0
+dWinY dword 0
 public dWinX
 public dWinY
 
@@ -53,8 +54,10 @@ TestRender PROC
 		mov rcx, r14
 		sub rsp, 20h
 		call GetClientRect 
-		mov dWinX, dword ptr [rsp+28h]
-		mov dWinY, dword ptr [rsp+2Ch]
+		mov eax, dword ptr [rsp+28h]
+		mov dWinX, eax
+		mov eax, dword ptr [rsp+2Ch]
+		mov dWinY, eax
 		add rsp, 30h
 
 	; begin paint

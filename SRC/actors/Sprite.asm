@@ -3,9 +3,12 @@ LoadImageW PROTO
 CreateCompatibleDC PROTO
 SelectObject PROTO
 MaskBlt PROTO 
-DeleteDC PROTO
 
 
+extern dWinX : dword
+extern dWinY : dword
+
+extern dSoldierSprite : word 
 ;
 
 .code
@@ -141,8 +144,9 @@ DrawActorSprite PROC
 	; r14 : pox Y (adjusted)
 	; r15 : pos X (adjusted)
 	; get actor type sprite address
-		mov rax, dword ptr [r12] 
-		shr rax, 21 ; rshift the unit type
+		xor rax, rax
+		mov eax, dword ptr [r12] 
+		shr eax, 21 ; rshift the unit type
 		xor rdx, rdx
 		mov r13, 28
 		mul r13
@@ -160,81 +164,81 @@ DrawActorSprite PROC
 		call SetSpriteDevice
 		mov rcx, r14 
 	; calc actor half width
-		mov rax, dword ptr [r13+18h]
-		shr rax, 1
+		mov eax, dword ptr [r13+18h]
+		shr eax, 1
 	; calc actor screen position
-		mov r15, dword ptr [r12+8] 
-		mov r14, dword ptr [r12+12]
-		sub r15, rax ; x 
-		sub r14, rax ; y
+		mov r15d, dword ptr [r12+8] 
+		mov r14d, dword ptr [r12+12]
+		sub r15d, eax ; x 
+		sub r14d, eax ; y
 		; add in screen position !!!
 
 	; validate whether sprite is on screen
 		; horizontal
-			xor r8, r8 ; left overlap
-			xor r9, r9 ; right overlap
+			xor r8d, r8d ; left overlap
+			xor r9d, r9d ; right overlap
 			; vaidate left side
-				mov rax, r15 ; x pos
+				mov eax, r15d ; x pos
 				; if x < 0
-				cmp rax, 0
+				cmp eax, 0
 				jge block5
-					add rax, dword ptr [r13+18h] ; sprite size
+					add eax, dword ptr [r13+18h] ; sprite size
 					; if x + width < 0 :: sprite is not visible
-					cmp rax, 0
+					cmp eax, 0
 					jl skip_draw
 					; store overlap
-					mov r8, rax
+					mov r8d, eax
 				block5:
 			; validate right side
-				mov rax, r15 ; x pos
-				add rax, dword ptr [r13+18h] ; sprite size
+				mov eax, r15d ; x pos
+				add eax, dword ptr [r13+18h] ; sprite size
 				; if x + width >= max_x
-				cmp rax, dWinX
+				cmp eax, dWinX
 				jl block6
-					mov rax, r15 ; x pos
+					mov eax, r15d ; x pos
 					; if x >= max_x :: sprite is not visible
-					cmp rax, dWinX
+					cmp eax, dWinX
 					jge skip_draw
 					; store size - overlap
-					mov rdx, dWinX
-					sub rdx, rax
-					mov r9, dword ptr [r13+18h] ; sprite size
-					sub r9, rdx
+					mov edx, dWinX
+					sub edx, eax
+					mov r9d, dword ptr [r13+18h] ; sprite size
+					sub r9d, edx
 				block6:
 		; vertical
-			xor r10, r10 ; top overlap
-			xor r11, r11 ; bottom overlap
+			xor r10d, r10d ; top overlap
+			xor r11d, r11d ; bottom overlap
 			; vaidate left side
-				mov rax, r14 ; y pos
+				mov eax, r14d ; y pos
 				; if y < 0
-				cmp rax, 0
+				cmp eax, 0
 				jge block7
-					add rax, dword ptr [r13+18h] ; sprite size
+					add eax, dword ptr [r13+18h] ; sprite size
 					; if y + width < 0 :: sprite is not visible
-					cmp rax, 0
+					cmp eax, 0
 					jl skip_draw
 					; store overlap
-					mov r10, rax
+					mov r10d, eax
 				block7:
 			; validate right side
-				mov rax, r14 ; y pos
-				add rax, dword ptr [r13+18h] ; sprite size
+				mov eax, r14d ; y pos
+				add eax, dword ptr [r13+18h] ; sprite size
 				; if y + width >= max_y
-				cmp rax, dWinX
+				cmp eax, dWinY
 				jl block8
-					mov rax, r14 ; y pos
+					mov eax, r14d ; y pos
 					; if y >= max_x :: sprite is not visible
-					cmp rax, dWinY
+					cmp eax, dWinY
 					jge skip_draw
 					; store size - overlap
-					mov rdx, dWinY
-					sub rdx, rax
-					mov r11, dword ptr [r13+18h] ; sprite size
-					sub r11, rdx
+					mov edx, dWinY
+					sub edx, eax
+					mov r11d, dword ptr [r13+18h] ; sprite size
+					sub r11d, edx
 				block8:
 	; update position values to use overlap values
-		add r15, r18 ; x
-		add r14, r10 ; y
+		add r15d, r8d ; x
+		add r14d, r10d ; y
 	; get actors current sprite frame
 		xor rax, rax
 		mov al, byte ptr [r12+5]
@@ -243,19 +247,19 @@ DrawActorSprite PROC
 		and al, 7 ; al: state index
 		shr cl, 6 ; cl: state
 	; write final sprite_x (->rdi)
-		xor rdx, rdx
-		mov rsi, dword ptr [r13+18h]
-		mul rsi
-		add rax, r8
-		mov rdi, rax
+		xor edx, edx
+		mov esi, dword ptr [r13+18h]
+		mul esi
+		add eax, r8d
+		mov edi, eax
 	; write final sprite_x (->rax)
-		xor rdx, rdx
-		xor rax, rax
+		xor edx, edx
+		xor eax, eax
 		mov al, cl
 		pop rcx
-		mov rsi, dword ptr [r13+18h]
-		mul rsi
-		add rax, r10
+		mov esi, dword ptr [r13+18h]
+		mul esi
+		add eax, r10d
 	; draw
 		push 0AACC0020h ; copy src foreground, maintain dst background ; copy op (00CC0020h)
 		
@@ -273,8 +277,8 @@ DrawActorSprite PROC
 
 		push r11 ; height
 		;mov r9, r9 ; width (redundant mov)
-		mov r8, r14 ; y
-		mov rdx, r15 ; x
+		mov r8d, r14d ; y
+		mov edx, r15d ; x
 		;mov rcx, rcx ; hdc (redundant mov)
 		mov r14, rcx ; preserve rcx
 		sub rsp, 20h

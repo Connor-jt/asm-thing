@@ -1,20 +1,22 @@
 
-extern LoadSprite : proc ; sprite entry
+LoadSprite PROTO ; sprite entry
 
-extern dWinX : dd
-extern dWinY : dd
+DeleteDC PROTO
+
+extern dWinX : dword
+extern dWinY : dword
 
 .data
-cSoldierSprite dw 's','d','.','b','m','p', 0
-cSoldierSpriteMask dw 's','d','m','.','b','m','p', 0
+cSoldierSprite word 's','d','.','b','m','p', 0
+cSoldierSpriteMask word 's','d','m','.','b','m','p', 0
 
 .data?
-dSoldierSprite db 28 dup(?)	; 0x0 bitmap ptr
+dSoldierSprite byte 28 dup(?)	; 0x0 bitmap ptr
 							; 0x8 mask bitmap ptr
 							; 0x10 bitmap hdc
 							; 0x18 bitmap dimensions (1x4byte)
 public dSoldierSprite
-cSpriteCount dd 28 ; count * 28
+cSpriteCount dword 28 ; count * 28
 .code
 
 
@@ -39,10 +41,10 @@ ReleaseSpriteHDCs PROC
 		push r13
 		sub rsp, 28h
 		lea r12, dSoldierSprite 
-		xor r13, r13
-	loop:
+		xor r13d, r13d
+	lloop:
 		; break if we reached the last valid index
-			cmp r13, cSpriteCount
+			cmp r13d, cSpriteCount
 			je return
 		; if hdc ptr is not null, release it
 			mov rcx, qword ptr [r12+10h]
@@ -53,8 +55,8 @@ ReleaseSpriteHDCs PROC
 			block8:
 		; next iteration
 			add r12, 28 ; inc offset
-			add r13, 28 ; inc index
-			jmp loop
+			add r13d, 28 ; inc index
+			jmp lloop
 	return:
 		add rsp, 28h
 		push r13

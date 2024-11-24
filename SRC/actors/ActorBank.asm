@@ -1,10 +1,10 @@
-ActorRender PROTO
+DrawActorSprite	PROTO
 
 .data
 
-dActorList db 120000 dup(0) ; 24 bytes x 5000 actors
-dLastActorIndex dq 0 ; index * 24
-dFirstFreeIndex dq 0 ; index * 24
+dActorList byte 120000 dup(0) ; 24 bytes x 5000 actors
+dLastActorIndex qword 0 ; index * 24
+dFirstFreeIndex qword 0 ; index * 24
 
 public dLastActorIndex
 ; Actor struct
@@ -30,8 +30,8 @@ public dLastActorIndex
 ; 00000000 00001111 : team
 
 
-dActorStatsList dq	0000000203401020h, ; basic infantry
-					0h
+dActorStatsList qword	0000000203401020h, ; basic infantry
+						0h
 ; Actor stats struct
 ;	00000000000000FF : max action cooldown
 ;	000000000000FF00 : max health
@@ -47,12 +47,12 @@ dActorStatsList dq	0000000203401020h, ; basic infantry
 ; rcx: unit type
 GetActorStats PROC
 	lea rax, dActorStatsList
-	add rax, rcx * 8
+	mov rax, qword ptr [rax+rcx*8]
 	ret
 GetActorStats ENDP
 
-; r8: y coord
-; rdx: x coord
+; r8d: y coord
+; edx: x coord
 ; rcx: unit type
 ActorBankCreate PROC
 	; get new actor address
@@ -65,12 +65,13 @@ ActorBankCreate PROC
 		or eax, 0100000h ; sets the 'is_valid' flag
 		mov dword ptr [r10], eax
 	; write position
-		mov dword ptr [r10+8], rdx
-		mov dword ptr [r10+12], r8
+		mov dword ptr [r10+8], edx
+		mov dword ptr [r10+12], r8d
 	; write in defaults from stats
 		call GetActorStats
-		mov byte ptr [r10+6], ah
-		mov byte ptr [r10+7], al
+		mov rdx, r10
+		mov byte ptr [rdx+6], ah
+		mov byte ptr [rdx+7], al
 	; complete
 		mov rax, r10
 		ret
@@ -86,7 +87,7 @@ ActorBankTick PROC
 	lea r12, dActorList 
 	mov r13, r12
 	add r13, dLastActorIndex
-	loop:
+	lloop:
 		; break if we reached the last valid index
 			cmp r12, r13
 			je loop_end
@@ -97,7 +98,7 @@ ActorBankTick PROC
 			block3:
 		; next iteration
 			add r12, 24
-			jmp loop
+			jmp lloop
 	loop_end:
 
 	pop r13
@@ -114,7 +115,7 @@ ActorBankRender PROC
 	lea r12, dActorList 
 	mov r13, r12
 	add r13, dLastActorIndex
-	loop:
+	lloop:
 		; break if we reached the last valid index
 			cmp r12, r13
 			je loop_end
@@ -127,7 +128,7 @@ ActorBankRender PROC
 			block4:
 		; next iteration
 			add r12, 24
-			jmp loop
+			jmp lloop
 	loop_end:
 
 	pop r13
