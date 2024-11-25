@@ -10,10 +10,10 @@ ActorTick PROC
 		cmp al, 16
 		jne skip_objective
 			; move unit 
-				mov r10d, dword ptr [r12+ 8] ; src x
-				mov r11d, dword ptr [r12+12] ; src y
-				sub r10d, dword ptr [r12+16] ; target x
-				sub r11d, dword ptr [r12+20] ; target y
+				mov r10d, dword ptr [r12+16] ; target x
+				mov r11d, dword ptr [r12+20] ; target y
+				sub r10d, dword ptr [r12+ 8] ; src x
+				sub r11d, dword ptr [r12+12] ; src y
 				mov r8b, 4 ; unit direction
 			; calc X movement
 				cmp r10d, 0

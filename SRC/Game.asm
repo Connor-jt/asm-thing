@@ -9,6 +9,7 @@ extern dCameraY : dword
 ConsolePrint PROTO
 ActorBankCreate PROTO
 CameraTick PROTO
+ActorBankTick PROTO
 
 .data
 cLMouseDownStr word 'L','e','f','t',' ','m','o','u','s','e',' ','w','a','s',' ','p','r','e','s','s','e','d','!','!',0
@@ -21,6 +22,8 @@ GameTick PROC
 	sub rsp, 8
 	; run camera related functions
 		call CameraTick
+	; run actor logic 
+		call ActorBankTick
 
 	; check mouse left down
 		lea rcx, dKeyMap

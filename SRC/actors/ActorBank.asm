@@ -1,13 +1,14 @@
 DrawActorSprite	PROTO
 ActorTick PROTO
 
+public dLastActorIndex
+
 .data
 
 dActorList byte 120000 dup(0) ; 24 bytes x 5000 actors
 dLastActorIndex qword 0 ; index * 24
 dFirstFreeIndex qword 0 ; index * 24
 
-public dLastActorIndex
 ; Actor struct
 ;	0h, 4 : handle
 ;	4h, 2 : state
@@ -89,8 +90,6 @@ ActorBankCreate ENDP
 
 ; no inputs
 ActorBankTick PROC
-	ret ; do nothing here right now
-	
 	sub rsp, 8
 	push r12 ; ptr to current actor
 	push r13 ; last address
