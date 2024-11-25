@@ -23,8 +23,8 @@ public dLastActorIndex
 
 ; Actor State
 ; 11000000 00000000 : animation state (00: none, 01: stepping, 10: actioning, 11: dying)
-; 00111000 00000000 : ???
-; 00000111 00000000 : direction/death animation step
+; 00111000 00000000 : direction/death animation step
+; 00000111 00000000 : ???
 ; 00000000 11000000 : ???
 ; 00000000 00110000 : objective state (00: none, 01: moveto, 10: attack, 11: ???)
 ; 00000000 00001111 : team

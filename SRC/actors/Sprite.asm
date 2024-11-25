@@ -246,6 +246,7 @@ DrawActorSprite PROC
 		mov al, byte ptr [r12+5]
 		push rcx ; reserve extra temp register
 		mov cl, al
+		shr al, 3
 		and al, 7 ; al: state index
 		shr cl, 6 ; cl: state
 	; write final sprite_x (->rdi)
