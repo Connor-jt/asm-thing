@@ -7,7 +7,7 @@ ActorTick PROC
 	; if current objective is move_to
 		mov al, byte ptr [r12+4]
 		and al, 30h
-		cmp al, 20h
+		cmp al, 16
 		jne skip_objective
 			; move unit 
 				mov r10d, dword ptr [r12+ 8] ; src x
@@ -51,9 +51,17 @@ ActorTick PROC
 				mov byte ptr [r12+5], r9b
 
 			; delete unit once they reach their destination
+				cmp r10d, 0
+				jne b16
+					cmp r11d, 0
+					jne b16
+						mov rax, 1
+						ret	
+				b16:
 		skip_objective:
 
 	; return
+		xor rax, rax ; output 0
 		ret
 ActorTick ENDP
 

@@ -1,4 +1,5 @@
 DrawActorSprite	PROTO
+ActorTick PROTO
 
 .data
 
@@ -20,6 +21,7 @@ public dLastActorIndex
 ; 11111111 11100000 00000000 00000000 : entity type (allowing 2k types)
 ; 00000000 00010000 00000000 00000000 : is valid
 ; 00000000 00001111 11111111 11111111 : index handle (allowing 1 mil reuses)
+; +3       +2       +1       +0
 
 ; Actor State
 ; 11000000 00000000 : animation state (00: none, 01: stepping, 10: actioning, 11: dying)
@@ -28,6 +30,7 @@ public dLastActorIndex
 ; 00000000 11000000 : ???
 ; 00000000 00110000 : objective state (00: none, 01: moveto, 10: attack, 11: ???)
 ; 00000000 00001111 : team
+; +1       +0
 
 
 dActorStatsList qword	0000000203401020h, ; basic infantry
@@ -41,6 +44,8 @@ dActorStatsList qword	0000000203401020h, ; basic infantry
 ;	0000FF0000000000 : ??? (this should contain actor flags? can move, can attack, ???)
 ;	00FF000000000000 : ???
 ;	FF00000000000000 : ???
+;   +7  +5  +3  +1
+;     +6  +4  +2  +0
 
 .code
 
@@ -63,15 +68,20 @@ ActorBankCreate PROC
 		mov eax, ecx
 		shl eax, 21
 		or eax, 0100000h ; sets the 'is_valid' flag
-		mov dword ptr [r10], eax
+		mov dword ptr [r10], eax ; handle
 	; write position
-		mov dword ptr [r10+8], edx
-		mov dword ptr [r10+12], r8d
+		mov dword ptr [r10+8], edx ; x
+		mov dword ptr [r10+12], r8d ; y
 	; write in defaults from stats
 		call GetActorStats
 		mov rdx, r10
-		mov byte ptr [rdx+6], ah
-		mov byte ptr [rdx+7], al
+		mov byte ptr [rdx+6], ah ; health
+		mov byte ptr [rdx+7], al ; action cooldown
+	; write blanks
+		;mov word ptr [rdx+4], 0 ; state
+		mov qword ptr [rdx+16], 0 ; target 
+	; [DEBUG] write in default state
+		mov word ptr [rdx+4], 16 ; state
 	; complete
 		mov rax, r10
 		ret
@@ -94,7 +104,11 @@ ActorBankTick PROC
 		; if current actor is valid
 			test dword ptr [r12], 0100000h
 			jz block3
-				
+				call ActorTick
+				; if function returned '1' then delete actor
+				cmp rax, 0
+				jz block3
+					and byte ptr [r12+2], 239
 			block3:
 		; next iteration
 			add r12, 24
@@ -137,9 +151,27 @@ ActorBankRender PROC
 	ret
 ActorBankRender ENDP
 
+;; rcx: actor ptr
+;ReleaseActor PROC
+;	and byte ptr [rcx+2], 239
+;	ret
+;ReleaseActor ENDP
+;
+;; ecx: index
+;ReleaseActorByIndex PROC
+;	; get actor pointer from index
+;		mov eax, ecx
+;		xor edx, edx
+;		mov ecx, 24
+;		mul ecx
+;		lea rcx, dActorList
+;		add rcx, eax
+;	; release actor (uncheck valid flag)
+;		and byte ptr [rcx+2], 239
+;	; return
+;		ret
+;ReleaseActorByIndex ENDP
 
-
-; release actor function
 ; actor ptr from handle function
 
 END
