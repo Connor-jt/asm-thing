@@ -44,6 +44,10 @@ ActorTick PROC
 						sub r8b, 3
 				b14:
 			; apply unit direction
+				cmp r8b, 4
+				jle b17	; index 4 does not actually exist, so we have to decrement each index past that
+					dec r8b
+				b17:
 				shl r8b, 3
 				mov r9b, byte ptr [r12+5]
 				and r9b, 199 ; clears bits 0b00111000
