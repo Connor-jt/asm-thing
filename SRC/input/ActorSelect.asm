@@ -1,12 +1,18 @@
 
-
-extern dKeyMap : byte
-extern dHeldKeyMap : byte
-extern dMouseX : dword
-extern dMouseY : dword
-
+; input externs
+	extern dKeyMap : byte
+	extern dHeldKeyMap : byte
+	extern dMouseX : dword
+	extern dMouseY : dword
+; actor iteration externs
+	extern SIZEOF_Actor : abs
+; consts
+	MAX_SELECTED_ACTORS EQU 100
 
 .data
+
+dSelectedActorsList qword MAX_SELECTED_ACTORS dup(0) ; 100 selected actor slots
+dSelectedActorsCount dword 0
 
 dOriginalMouseX dword 0
 dOriginalMouseY dword 0
@@ -47,13 +53,114 @@ ActorSelectTick PROC
 					jmp b18
 			b19: 
 			; if no longer held
+				; clear selected actors, unless shift is being held down
+					lea rcx, dHeldKeyMap
+					mov al, byte ptr [rcx+16]
+					cmp al, 1
+					je b27
+						mov dSelectedActorsCount, 0
+					b27:
 				; either select unit or rectangle select
-
-				mov dMouseHeldDownFor, 0
-				mov dShouldShowSelectBounds, 0
+				cmp dShouldShowSelectBounds, 0
+				jz b25 ; drag rectangle select
+					call SelectActorWithinRect
+					jmp b26
+				b25: ; single click select
+					
+					
+				b26:
+				; cleanup
+					mov dMouseHeldDownFor, 0
+					mov dShouldShowSelectBounds, 0
 		b18:
 
 	; return
 		add rsp, 8
 		ret
 ActorSelectTick ENDP
+
+
+; no inputs
+SelectActorWithinRect PROC
+	; config locals
+		push r12 ; ptr to current actor
+		lea r12, dActorList 
+		mov rsi, r12
+		add rsi, dLastActorIndex ; last address
+		xor rdi, rdi ; actor index
+		; r8d:  low_x
+		; r9d:  high_x
+		; r10d: low_y
+		; r11d: high_y
+	; write rect_low_x, rect_high_x
+		mov eax, dOriginalMouseX
+		cmp eax, dMouseX
+		je loop_end ; skip if empty size
+		jl b21 ; if og_x > x
+			mov r8d, dMouseX		 ; low
+			mov r9d, dOriginalMouseX ; high
+			jmp b22
+		b21: ; if og_x < x
+			mov r8d, dOriginalMouseX ; low
+			mov r9d, dMouseX         ; high
+		b22:
+	; write rect_low_y, rect_high_y
+		mov eax, dOriginalMouseY
+		cmp eax, dMouseY
+		je loop_end ; skip if empty size
+		jl b23 ; if og_y > y
+			mov r10d, dMouseY		  ; low
+			mov r11d, dOriginalMouseY ; high
+			jmp b24
+		b23: ; if og_y < y
+			mov r10d, dOriginalMouseY ; low
+			mov r11d, dMouseY         ; high
+		b24:
+	; convert screen positions to world positions
+		add r8d, dCameraX
+		add r9d, dCameraX
+		add r10d, dCameraY
+		add r11d, dCameraY
+
+	lloop:
+		; break if we reached the last valid index
+			cmp r12, rsi
+			je return
+		; if current actor is valid
+			test dword ptr [r12], 0100000h
+			jz b20
+				mov eax, dword ptr [r12+8]
+				; if x >= rect_low_x (r8d)
+				cmp eax, r8d
+				jl b20
+					; if x <= rect_high_x (r9d)
+					cmp eax, r9d
+					jg b20
+						; if y > rect_low_y (r10d)
+						mov eax, dword ptr [r12+12]
+						cmp eax, r10d
+						jl b20
+							; if y < rect_high_y (r11d)
+							cmp eax, r11d
+							jg b20
+								; verify we have enough room in our selection buffer
+								cmp dSelectedActorsCount, MAX_SELECTED_ACTORS
+								je return
+								; get actor index & handle and write to thing buffer
+								mov rax, rdi
+								shl rax, 32
+								mov eax, dword ptr [r12]
+								mov rcx, dSelectedActorsList
+								mov rdx, dSelectedActorsCount
+								mov qword ptr [rcx+rdx*8], rax
+								; inc selected count
+								inc dSelectedActorsCount
+			b20:
+		; next iteration
+			add r12, SIZEOF_Actor
+			inc rdi
+			jmp lloop
+	return:
+		pop r12
+		ret
+SelectActorWithinRect ENDP
