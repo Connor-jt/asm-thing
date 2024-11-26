@@ -2,11 +2,13 @@
 ; see https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
 
 dKeyMap byte 256 dup(0)
+dHeldKeyMap byte 256 dup(0)
 
 dMouseX dword 0
 dMouseY dword 0
 
 public dKeyMap
+public dHeldKeyMap
 public dMouseX
 public dMouseY
 

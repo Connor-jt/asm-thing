@@ -14,7 +14,7 @@ ActorBankTick PROTO
 .data
 cLMouseDownStr word 'L','e','f','t',' ','m','o','u','s','e',' ','w','a','s',' ','p','r','e','s','s','e','d','!','!',0
 
-
+dMouseHeldDownFor dword 0
 
 .code
 
