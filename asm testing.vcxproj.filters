@@ -51,6 +51,9 @@
     <MASM Include="SRC\Camera.asm">
       <Filter>Source Files</Filter>
     </MASM>
+    <MASM Include="SRC\input\ActorSelect.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">

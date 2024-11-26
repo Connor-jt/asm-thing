@@ -1,7 +1,11 @@
 DrawActorSprite	PROTO
 ActorTick PROTO
 
+public dActorList
 public dLastActorIndex
+
+SIZEOF_Actor EQU 24
+PUBLIC SIZEOF_Actor
 
 .data
 
@@ -64,7 +68,7 @@ ActorBankCreate PROC
 	; get new actor address
 		lea r10, dActorList
 		add r10, dLastActorIndex
-		add dLastActorIndex, 24
+		add dLastActorIndex, SIZEOF_Actor
 	; write handle
 		mov eax, ecx
 		shl eax, 21
@@ -104,13 +108,13 @@ ActorBankTick PROC
 			test dword ptr [r12], 0100000h
 			jz block3
 				call ActorTick
-				; if function returned '1' then delete actor
+				; if function returned value other than 0, then delete actor
 				cmp rax, 0
 				jz block3
 					and byte ptr [r12+2], 239
 			block3:
 		; next iteration
-			add r12, 24
+			add r12, SIZEOF_Actor
 			jmp lloop
 	loop_end:
 
@@ -140,7 +144,7 @@ ActorBankRender PROC
 				call DrawActorSprite
 			block4:
 		; next iteration
-			add r12, 24
+			add r12, SIZEOF_Actor
 			jmp lloop
 	loop_end:
 
@@ -161,7 +165,7 @@ ActorBankRender ENDP
 ;	; get actor pointer from index
 ;		mov eax, ecx
 ;		xor edx, edx
-;		mov ecx, 24
+;		mov ecx, SIZEOF_Actor
 ;		mul ecx
 ;		lea rcx, dActorList
 ;		add rcx, eax
