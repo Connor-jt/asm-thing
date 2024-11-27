@@ -11,7 +11,6 @@ extern dWinY : dword
 extern dCameraX : dword
 extern dCameraY : dword
 
-extern dSoldierSprite : word 
 
 
 .code
@@ -146,15 +145,11 @@ DrawActorSprite PROC
 	; r13 : sprite ptr
 	; r14 : pox Y (adjusted)
 	; r15 : pos X (adjusted)
+		mov r14, rcx ; temp preserve value of rcx
 	; get actor type sprite address
-		xor rax, rax
-		mov eax, dword ptr [r12] 
-		shr eax, 21 ; rshift the unit type
-		xor rdx, rdx
-		mov r13, 28
-		mul r13
-		lea r13, dSoldierSprite
-		add r13, rax
+		mov rcx, r12
+		call GetActorSprite
+		mov r13, rax 
 	; validate sprite
 		cmp qword ptr [r13], 0 ; check bitmap
 		je skip_draw
@@ -163,7 +158,6 @@ DrawActorSprite PROC
 		cmp dword ptr [r13+18h], 0 ; check size
 		je skip_draw
 	; load sprite HDC 
-		mov r14, rcx ; preserve value of rcx
 		call SetSpriteDevice
 		mov rcx, r14 
 	; calc actor half width

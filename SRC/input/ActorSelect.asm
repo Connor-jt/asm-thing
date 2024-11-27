@@ -11,6 +11,8 @@
 
 .data
 
+cActorSelectedStr dw 'A','c','t','o','r',' ','c','o','u','n','t',0
+
 dSelectedActorsList qword MAX_SELECTED_ACTORS dup(0) ; 100 selected actor slots
 dSelectedActorsCount dword 0
 
@@ -66,12 +68,17 @@ ActorSelectTick PROC
 					call SelectActorWithinRect
 					jmp b26
 				b25: ; single click select
-					
-					
+					call SelectActorAt
 				b26:
 				; cleanup
 					mov dMouseHeldDownFor, 0
 					mov dShouldShowSelectBounds, 0
+				; [DEBUG] print out how many actors we have selected
+					mov rdx, 1
+					lea rcx, cActorSelectedStr
+					call ConsolePrint
+					mov rcx, dSelectedActorsCount
+					call ConsolePrintNumber
 		b18:
 
 	; return
@@ -79,8 +86,6 @@ ActorSelectTick PROC
 		ret
 ActorSelectTick ENDP
 
-
-; no inputs
 SelectActorWithinRect PROC
 	; config locals
 		push r12 ; ptr to current actor
@@ -164,3 +169,71 @@ SelectActorWithinRect PROC
 		pop r12
 		ret
 SelectActorWithinRect ENDP
+
+; no inputs
+SelectActorAt PROC
+	; config locals
+		push r12 ; ptr to current actor
+		lea r12, dActorList 
+		mov rsi, r12
+		add rsi, dLastActorIndex ; last address
+		xor rdi, rdi ; actor index
+	; verify we have enough room in our selection buffer
+		cmp dSelectedActorsCount, MAX_SELECTED_ACTORS
+		je return
+	; convert mouse position to world position
+		mov r8d, dMouseX
+		add r8d, dCameraX
+		mov r9d, dMouseY
+		add r9d, dCameraY
+	lloop:
+		; break if we reached the last valid index
+			cmp r12, rsi
+			je return
+		; if current actor is valid
+			test dword ptr [r12], 0100000h
+			jz b28
+				; fetch actor size
+					mov rcx, r12
+					call GetActorSprite
+					mov r10d, dword ptr [rax+18h] 
+					shr r10d, 1
+				; if x - size <= click_x (r8d)
+				mov eax, dword ptr [r12+8]
+				sub eax, r10d
+				cmp eax, r8d
+				jg b28
+					; if x + size >= click_x (r8d)
+					mov eax, dword ptr [r12+8]
+					add eax, r10d
+					cmp eax, r8d
+					jl b28
+						; if y - size <= click_y (r9d)
+						mov eax, dword ptr [r12+12]
+						sub eax, r10d
+						cmp eax, r9d
+						jg b28
+							; if y + size >= click_y (r9d)
+							mov eax, dword ptr [r12+12]
+							add eax, r10d
+							cmp eax, r9d
+							jl b28
+								; get actor index & handle and write to thing buffer
+								mov rax, rdi
+								shl rax, 32
+								mov eax, dword ptr [r12]
+								mov rcx, dSelectedActorsList
+								mov rdx, dSelectedActorsCount
+								mov qword ptr [rcx+rdx*8], rax
+								; inc selected count
+								inc dSelectedActorsCount
+								jmp return
+			b28:
+		; next iteration
+			add r12, SIZEOF_Actor
+			inc rdi
+			jmp lloop
+	return:
+		pop r12
+		ret
+SelectActorAt ENDP

@@ -21,9 +21,6 @@ DebugUIRender PROTO
 ActorBankRender PROTO ; sprite entry
 ReleaseSpriteHDCs PROTO ; spritebank entry
 
-
-; NOTE: temporary thing
-extern dSoldierSprite : byte ; not sure if this is correct or not??
 extern dTimeFequency : qword
 
 .data
