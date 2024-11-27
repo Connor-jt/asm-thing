@@ -6,8 +6,18 @@
 	extern dMouseY : dword
 ; actor iteration externs
 	extern SIZEOF_Actor : abs
+	extern dLastActorIndex : qword
+	extern dActorList : byte
+; scene externs
+	extern dCameraX : dword
+	extern dCameraY : dword
 ; consts
 	MAX_SELECTED_ACTORS EQU 100
+; my func imports
+	GetActorSprite PROTO
+	ConsolePrint PROTO
+	ConsolePrintNumber PROTO
+	ActorPtrFromHandle PROTO
 
 .data
 
@@ -24,6 +34,87 @@ dShouldShowSelectBounds byte 0
 
 .code 
 
+; rcx: hdc
+ActorSelectRender PROC
+	; config locals
+		push r12 ; cached actor list ptr
+		push r13 ; item index
+		push r14 ; curr actor handle
+		push r15 ; hdc
+		sub rsp, 38h ; 8 align, 10h rect struct, 20h shadow space
+		lea r12, dSelectedActorsList
+		xor r13, r13 
+		mov r15, rcx
+	; render borders around all selected actors
+		lloop:
+			; break if at the end of the array
+				cmp r13, MAX_SELECTED_ACTORS
+				je loop_end
+			; fetch current actor ptr
+				mov rcx, qword ptr [r12+r13*8]
+				call ActorPtrFromHandle
+				mov r14, rax
+			; if returned ptr is null, goto next iteration
+				test r14, r14
+				jz b31
+			; get curr actor sprite size
+				mov rcx, r14
+				call GetActorSprite
+				mov rax, dword ptr [rax+18h]
+				shr rax, 1 ; half it
+			; generate screen coords
+				; r8d: low_x
+				; r9d: high_x
+				; r10d: low_y
+				; r11d: high_y
+				; verify actor is on screen
+					mov r8d, dword ptr [r14+8]
+					mov r10d, dword ptr [r14+12]
+				; if X off-screen
+					cmp r8d, 0
+					jl b31
+					cmp r8d, dWinX
+					jge b31
+				; if Y off-screen
+					cmp r10d, 0
+					jl b31
+					cmp r10d, dWinY
+					jge b31
+				; set X coords
+					mov r9d, r8d
+					sub r8d, rax
+					add r9d, rax
+					sub r8d, dCameraX
+					sub r9d, dCameraX
+				; set Y coords
+					mov r11d, r10d
+					sub r10d, rax
+					add r11d, rax
+					sub r10d, dCameraY
+					sub r11d, dCameraY
+			; construct Rect struct
+				mov dword ptr [rsp+20h], r8d
+				mov dword ptr [rsp+28h], r9d
+				mov dword ptr [rsp+24h], r10d
+				mov dword ptr [rsp+2Ch], r11d
+			; drawcall border square	
+				mov r8, 26
+				lea rdx, [rsp+20h] ; not sure this is quite right?
+				mov rcx, r15
+				call FrameRect
+			b31:
+				inc r13
+			jmp lloop
+		loop_end:
+	; cleanup
+		add rsp, 38h
+		pop r15
+		pop r14
+		pop r13
+		pop r12 
+		ret
+	; render selection border if show select bounds is true
+ActorSelectRender ENDP
 
 ActorSelectTick PROC
 	sub rsp, 8
@@ -34,8 +125,10 @@ ActorSelectTick PROC
 		je b17
 			; check flag that indicates we should be tracking how long its been held for
 			mov dMouseHeldDownFor, 1
-			mov dOriginalMouseX, dMouseX
-			mov dOriginalMouseY, dMouseY
+			mov eax, dMouseX
+			mov dOriginalMouseX, eax
+			mov eax, dMouseY
+			mov dOriginalMouseY, eax
 		b17:
 
 	; if mouse previously held
@@ -77,7 +170,8 @@ ActorSelectTick PROC
 					mov rdx, 1
 					lea rcx, cActorSelectedStr
 					call ConsolePrint
-					mov rcx, dSelectedActorsCount
+					xor rcx, rcx
+					mov ecx, dSelectedActorsCount
 					call ConsolePrintNumber
 		b18:
 
@@ -100,7 +194,7 @@ SelectActorWithinRect PROC
 	; write rect_low_x, rect_high_x
 		mov eax, dOriginalMouseX
 		cmp eax, dMouseX
-		je loop_end ; skip if empty size
+		je return ; skip if empty size
 		jl b21 ; if og_x > x
 			mov r8d, dMouseX		 ; low
 			mov r9d, dOriginalMouseX ; high
@@ -112,7 +206,7 @@ SelectActorWithinRect PROC
 	; write rect_low_y, rect_high_y
 		mov eax, dOriginalMouseY
 		cmp eax, dMouseY
-		je loop_end ; skip if empty size
+		je return ; skip if empty size
 		jl b23 ; if og_y > y
 			mov r10d, dMouseY		  ; low
 			mov r11d, dOriginalMouseY ; high
@@ -152,9 +246,10 @@ SelectActorWithinRect PROC
 								cmp dSelectedActorsCount, MAX_SELECTED_ACTORS
 								je return
 								; get actor index & handle and write to thing buffer
-								mov rax, rdi
-								shl rax, 32
+								mov rcx, rdi
+								shl rcx, 32
 								mov eax, dword ptr [r12]
+								or rax, rcx
 								mov rcx, dSelectedActorsList
 								mov rdx, dSelectedActorsCount
 								mov qword ptr [rcx+rdx*8], rax
@@ -219,11 +314,12 @@ SelectActorAt PROC
 							cmp eax, r9d
 							jl b28
 								; get actor index & handle and write to thing buffer
-								mov rax, rdi
-								shl rax, 32
+								mov rcx, rdi
+								shl rcx, 32
 								mov eax, dword ptr [r12]
+								or rax, rcx
 								mov rcx, dSelectedActorsList
-								mov rdx, dSelectedActorsCount
+								movzx rdx, dSelectedActorsCount
 								mov qword ptr [rcx+rdx*8], rax
 								; inc selected count
 								inc dSelectedActorsCount
@@ -237,3 +333,5 @@ SelectActorAt PROC
 		pop r12
 		ret
 SelectActorAt ENDP
+
+END

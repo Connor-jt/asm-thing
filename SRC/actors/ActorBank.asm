@@ -175,6 +175,25 @@ ActorBankRender ENDP
 ;		ret
 ;ReleaseActorByIndex ENDP
 
-; actor ptr from handle function
+; rcx: actor handle (index & type handle)
+ActorPtrFromHandle PROC
+	; digest actor handle
+		mov rax, rcx
+		shr rax, 32 ; move index into lower 4 bytes
+	; generate actor ptr
+		xor edx, edx
+		mov esi, SIZEOF_Actor
+		mul esi
+		lea rsi, dActorList
+		add rsi, eax
+	; if the indexed actor is valid & has a matching handle
+		cmp dword ptr [rsi], ecx
+		jne b30
+			mov rax, rsi
+			ret
+		b30:
+		xor rax, rax
+		ret
+ActorPtrFromHandle ENDP
 
 END

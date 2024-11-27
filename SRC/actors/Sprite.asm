@@ -4,6 +4,8 @@ CreateCompatibleDC PROTO
 SelectObject PROTO
 MaskBlt PROTO 
 
+GetActorSprite PROTO
+
 
 extern dWinX : dword
 extern dWinY : dword

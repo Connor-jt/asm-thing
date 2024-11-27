@@ -36,8 +36,8 @@ LoadSpriteLibrary ENDP
 ; rcx: actor ptr
 ; [return] rax: sprite ptr
 GetActorSprite PROC
-	mov rax, dword ptr [rcx] 
-	shr rax, 21 ; rshift the unit type
+	mov eax, dword ptr [rcx] 
+	shr eax, 21 ; rshift the unit type
 	xor rdx, rdx
 	mov rcx, SIZEOF_Sprite
 	mul rcx
