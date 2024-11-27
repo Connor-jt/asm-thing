@@ -70,6 +70,8 @@ ActorSelectRender PROC
 				; verify actor is on screen
 					mov r8d, dword ptr [r14+8]
 					mov r10d, dword ptr [r14+12]
+					sub r8d, dCameraX
+					sub r10d, dCameraY
 				; if X off-screen
 					cmp r8d, 0
 					jl b31
@@ -89,14 +91,10 @@ ActorSelectRender PROC
 					mov r9d, r8d
 					sub r8d, eax
 					add r9d, eax
-					sub r8d, dCameraX
-					sub r9d, dCameraX
 				; set Y coords
 					mov r11d, r10d
 					sub r10d, eax
 					add r11d, eax
-					sub r10d, dCameraY
-					sub r11d, dCameraY
 			; construct Rect struct
 				mov dword ptr [rsp+20h], r8d
 				mov dword ptr [rsp+28h], r9d
