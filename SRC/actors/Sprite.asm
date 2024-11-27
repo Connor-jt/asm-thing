@@ -160,6 +160,7 @@ DrawActorSprite PROC
 		cmp dword ptr [r13+18h], 0 ; check size
 		je skip_draw
 	; load sprite HDC 
+		mov rcx, r14 
 		call SetSpriteDevice
 		mov rcx, r14 
 	; calc actor half width

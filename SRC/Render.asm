@@ -20,6 +20,7 @@ DebugUIRender PROTO
 
 ActorBankRender PROTO ; sprite entry
 ReleaseSpriteHDCs PROTO ; spritebank entry
+ActorSelectRender PROTO ; actor select entry
 
 extern dTimeFequency : qword
 
@@ -74,10 +75,13 @@ TestRender PROC
 		call SetBkMode
 
 	; draw all actors
-		mov rcx, r12
+		mov rcx, r12 ; hdc
 		call ActorBankRender
 	; release draw actor resources
 		call ReleaseSpriteHDCs
+	; draw actor selection stuff
+		mov rcx, r12 ; hdc
+		call ActorSelectRender
 
 	; [DEBUG] render console
 		mov rcx, r12 ; hdc

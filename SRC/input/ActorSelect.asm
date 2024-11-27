@@ -53,7 +53,7 @@ ActorSelectRender PROC
 	; render borders around all selected actors
 		lloop:
 			; break if at the end of the array
-				cmp r13, MAX_SELECTED_ACTORS
+				cmp r13d, dSelectedActorsCount
 				je loop_end
 			; fetch current actor ptr
 				mov rcx, qword ptr [r12+r13*8]
@@ -108,7 +108,7 @@ ActorSelectRender PROC
 				mov rcx, r15
 				call FrameRect
 			b31:
-				inc r13
+				inc r13d
 			jmp lloop
 		loop_end:
 	; render selection border if show select bounds is true
@@ -248,7 +248,7 @@ SelectActorWithinRect PROC
 								shl rcx, 32
 								mov eax, dword ptr [r12]
 								or rax, rcx
-								mov rcx, dSelectedActorsList
+								lea rcx, dSelectedActorsList
 								mov edx, dSelectedActorsCount
 								mov qword ptr [rcx+rdx*8], rax
 								; inc selected count
@@ -316,7 +316,7 @@ SelectActorAt PROC
 								shl rcx, 32
 								mov eax, dword ptr [r12]
 								or rax, rcx
-								mov rcx, dSelectedActorsList
+								lea rcx, dSelectedActorsList
 								mov edx, dSelectedActorsCount
 								mov qword ptr [rcx+rdx*8], rax
 								; inc selected count
