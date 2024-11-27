@@ -11,6 +11,9 @@
 ; scene externs
 	extern dCameraX : dword
 	extern dCameraY : dword
+; window externs
+	extern dWinX : dword
+	extern dWinY : dword
 ; consts
 	MAX_SELECTED_ACTORS EQU 100
 ; my func imports
@@ -18,6 +21,8 @@
 	ConsolePrint PROTO
 	ConsolePrintNumber PROTO
 	ActorPtrFromHandle PROTO
+; windows funcs
+	FrameRect PROTO
 
 .data
 
@@ -106,14 +111,31 @@ ActorSelectRender PROC
 				inc r13
 			jmp lloop
 		loop_end:
-	; cleanup
+	; render selection border if show select bounds is true
+		cmp dShouldShowSelectBounds, 0
+		je b32
+			; get selection rect
+				call GetSelectRect
+				test rax, rax
+				jnz b32
+			; construct Rect struct
+				mov dword ptr [rsp+20h], r8d
+				mov dword ptr [rsp+28h], r9d
+				mov dword ptr [rsp+24h], r10d
+				mov dword ptr [rsp+2Ch], r11d
+			; drawcall border square	
+				mov r8, 1
+				lea rdx, [rsp+20h] ; not sure this is quite right?
+				mov rcx, r15
+				call FrameRect
+		b32:
+	; return
 		add rsp, 38h
 		pop r15
 		pop r14
 		pop r13
 		pop r12 
 		ret
-	; render selection border if show select bounds is true
 ActorSelectRender ENDP
 
 ActorSelectTick PROC
@@ -180,6 +202,7 @@ ActorSelectTick PROC
 		ret
 ActorSelectTick ENDP
 
+
 SelectActorWithinRect PROC
 	; config locals
 		push r12 ; ptr to current actor
@@ -187,40 +210,15 @@ SelectActorWithinRect PROC
 		mov rsi, r12
 		add rsi, dLastActorIndex ; last address
 		xor rdi, rdi ; actor index
-		; r8d:  low_x
-		; r9d:  high_x
-		; r10d: low_y
-		; r11d: high_y
-	; write rect_low_x, rect_high_x
-		mov eax, dOriginalMouseX
-		cmp eax, dMouseX
-		je return ; skip if empty size
-		jl b21 ; if og_x > x
-			mov r8d, dMouseX		 ; low
-			mov r9d, dOriginalMouseX ; high
-			jmp b22
-		b21: ; if og_x < x
-			mov r8d, dOriginalMouseX ; low
-			mov r9d, dMouseX         ; high
-		b22:
-	; write rect_low_y, rect_high_y
-		mov eax, dOriginalMouseY
-		cmp eax, dMouseY
-		je return ; skip if empty size
-		jl b23 ; if og_y > y
-			mov r10d, dMouseY		  ; low
-			mov r11d, dOriginalMouseY ; high
-			jmp b24
-		b23: ; if og_y < y
-			mov r10d, dOriginalMouseY ; low
-			mov r11d, dMouseY         ; high
-		b24:
+	; get select rect
+		call GetSelectRect
+		test rax, rax
+		jnz return
 	; convert screen positions to world positions
 		add r8d, dCameraX
 		add r9d, dCameraX
 		add r10d, dCameraY
 		add r11d, dCameraY
-
 	lloop:
 		; break if we reached the last valid index
 			cmp r12, rsi
@@ -333,5 +331,44 @@ SelectActorAt PROC
 		pop r12
 		ret
 SelectActorAt ENDP
+
+; [outputs]
+; r8d:  low_x
+; r9d:  high_x
+; r10d: low_y
+; r11d: high_y
+GetSelectRect PROC
+	; write rect_low_x, rect_high_x
+		mov eax, dOriginalMouseX
+		cmp eax, dMouseX
+		je return_fail ; skip if empty size
+		jl b21 ; if og_x > x
+			mov r8d, dMouseX		 ; low
+			mov r9d, dOriginalMouseX ; high
+			jmp b22
+		b21: ; if og_x < x
+			mov r8d, dOriginalMouseX ; low
+			mov r9d, dMouseX         ; high
+		b22:
+	; write rect_low_y, rect_high_y
+		mov eax, dOriginalMouseY
+		cmp eax, dMouseY
+		je return_fail ; skip if empty size
+		jl b23 ; if og_y > y
+			mov r10d, dMouseY		  ; low
+			mov r11d, dOriginalMouseY ; high
+			jmp b24
+		b23: ; if og_y < y
+			mov r10d, dOriginalMouseY ; low
+			mov r11d, dMouseY         ; high
+		b24:
+	; return
+		xor rax, rax
+		ret
+	return_fail:
+		mov rax, 1
+		ret
+GetSelectRect ENDP
+
 
 END
