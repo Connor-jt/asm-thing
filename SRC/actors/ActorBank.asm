@@ -185,7 +185,7 @@ ActorPtrFromHandle PROC
 		mov esi, SIZEOF_Actor
 		mul esi
 		lea rsi, dActorList
-		add rsi, eax
+		add rsi, rax
 	; if the indexed actor is valid & has a matching handle
 		cmp dword ptr [rsi], ecx
 		jne b30

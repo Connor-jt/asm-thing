@@ -62,11 +62,6 @@ ActorSelectRender PROC
 			; if returned ptr is null, goto next iteration
 				test r14, r14
 				jz b31
-			; get curr actor sprite size
-				mov rcx, r14
-				call GetActorSprite
-				mov rax, dword ptr [rax+18h]
-				shr rax, 1 ; half it
 			; generate screen coords
 				; r8d: low_x
 				; r9d: high_x
@@ -85,16 +80,21 @@ ActorSelectRender PROC
 					jl b31
 					cmp r10d, dWinY
 					jge b31
+				; get curr actor sprite size
+					mov rcx, r14
+					call GetActorSprite
+					mov eax, dword ptr [rax+18h]
+					shr eax, 1 ; half it
 				; set X coords
 					mov r9d, r8d
-					sub r8d, rax
-					add r9d, rax
+					sub r8d, eax
+					add r9d, eax
 					sub r8d, dCameraX
 					sub r9d, dCameraX
 				; set Y coords
 					mov r11d, r10d
-					sub r10d, rax
-					add r11d, rax
+					sub r10d, eax
+					add r11d, eax
 					sub r10d, dCameraY
 					sub r11d, dCameraY
 			; construct Rect struct
@@ -249,7 +249,7 @@ SelectActorWithinRect PROC
 								mov eax, dword ptr [r12]
 								or rax, rcx
 								mov rcx, dSelectedActorsList
-								mov rdx, dSelectedActorsCount
+								mov edx, dSelectedActorsCount
 								mov qword ptr [rcx+rdx*8], rax
 								; inc selected count
 								inc dSelectedActorsCount
@@ -317,7 +317,7 @@ SelectActorAt PROC
 								mov eax, dword ptr [r12]
 								or rax, rcx
 								mov rcx, dSelectedActorsList
-								movzx rdx, dSelectedActorsCount
+								mov edx, dSelectedActorsCount
 								mov qword ptr [rcx+rdx*8], rax
 								; inc selected count
 								inc dSelectedActorsCount
