@@ -178,18 +178,6 @@ DrawActorSprite PROC
 		; horizontal
 			xor r8d, r8d ; left overlap
 			mov r9d, dword ptr [r13+18h] ; right overlap = sprite size
-			; vaidate left side
-				mov eax, r15d ; x pos
-				; if x < 0
-				cmp eax, 0
-				jge block5
-					add eax, dword ptr [r13+18h] ; sprite size
-					; if x + width < 0 :: sprite is not visible
-					cmp eax, 0
-					jl skip_draw
-					; store overlap
-					mov r8d, eax
-				block5:
 			; validate right side
 				mov eax, r15d ; x pos
 				add eax, dword ptr [r13+18h] ; sprite size
@@ -203,24 +191,27 @@ DrawActorSprite PROC
 					; store size - overlap
 					mov edx, dWinX
 					sub edx, eax
-					sub r9d, edx
+					mov r9d, edx ; move available space into r9d
 				block6:
-		; vertical
-			xor r10d, r10d ; top overlap
-			mov r11d, dword ptr [r13+18h] ; bottom overlap = sprite size
 			; vaidate left side
-				mov eax, r14d ; y pos
-				; if y < 0
+				mov eax, r15d ; x pos
+				; if x < 0
 				cmp eax, 0
-				jge block7
+				jge block5
 					add eax, dword ptr [r13+18h] ; sprite size
-					; if y + width < 0 :: sprite is not visible
+					; if x + width < 0 :: sprite is not visible
 					cmp eax, 0
 					jl skip_draw
 					; store overlap
-					mov r10d, eax
-				block7:
-			; validate right side
+					mov edx, dword ptr [r13+18h]
+					sub edx, eax
+					mov r8d, edx
+					sub r9d, edx
+				block5:
+		; vertical
+			xor r10d, r10d ; top overlap
+			mov r11d, dword ptr [r13+18h] ; bottom overlap = sprite size
+			; validate bottom side
 				mov eax, r14d ; y pos
 				add eax, dword ptr [r13+18h] ; sprite size
 				; if y + width >= max_y
@@ -233,8 +224,23 @@ DrawActorSprite PROC
 					; store size - overlap
 					mov edx, dWinY
 					sub edx, eax
-					sub r11d, edx
+					mov r11d, edx ; move available space into r11d
 				block8:
+			; vaidate top side
+				mov eax, r14d ; y pos
+				; if y < 0
+				cmp eax, 0
+				jge block7
+					add eax, dword ptr [r13+18h] ; sprite size
+					; if y + width < 0 :: sprite is not visible
+					cmp eax, 0
+					jl skip_draw
+					; store overlap
+					mov edx, dword ptr [r13+18h]
+					sub edx, eax
+					mov r10d, edx
+					sub r11d, edx
+				block7:
 	; update position values to use overlap values
 		add r15d, r8d ; x
 		add r14d, r10d ; y
