@@ -140,7 +140,7 @@ ActorSelectTick PROC
 	sub rsp, 8
 	; if left mouse pressed
 		lea rcx, dKeyMap
-		mov al, byte ptr [rcx+1]
+		mov al, byte ptr [rcx+2]
 		cmp al, 0
 		je b17
 			; check flag that indicates we should be tracking how long its been held for
@@ -156,7 +156,7 @@ ActorSelectTick PROC
 		je b18
 			; check whether mouse is still held down
 			lea rcx, dHeldKeyMap
-			mov al, byte ptr [rcx+1]
+			mov al, byte ptr [rcx+2]
 			cmp al, 0
 			je b19
 			; if held still
