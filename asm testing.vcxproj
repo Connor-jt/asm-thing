@@ -153,6 +153,7 @@
     <MASM Include="SRC\input\ActorSelect.asm" />
     <MASM Include="SRC\input\InputBank.asm" />
     <MASM Include="SRC\Render.asm" />
+    <MASM Include="SRC\UI\ActorUI.asm" />
     <MASM Include="SRC\UI\ConsoleUI.asm" />
     <MASM Include="SRC\UI\DebugUI.asm" />
     <MASM Include="SRC\utils.asm" />
