@@ -33,6 +33,7 @@ cActorSelectedStr dw 'A','c','t','o','r',' ','c','o','u','n','t',0
 
 dSelectedActorsList qword MAX_SELECTED_ACTORS dup(0) ; 100 selected actor slots
 dSelectedActorsCount dword 0
+dHoveredActor qword 0
 
 dOriginalMouseX dword 0
 dOriginalMouseY dword 0
@@ -112,6 +113,49 @@ ActorSelectRender PROC
 				inc r13d
 			jmp lloop
 		loop_end:
+
+	; render border for hovered actor
+		; skip if no hovered actor
+			cmp dHoveredActor, 0
+			je skip_hover_border
+		; fetch current actor ptr
+			mov rcx, dHoveredActor
+			call ActorPtrFromHandle
+		; if actor null, skip
+			test rax, rax
+			jz b31
+		; render border
+			; verify actor is on screen
+				mov r8d, dword ptr [rax+8]
+				mov r10d, dword ptr [rax+12]
+				sub r8d, dCameraX
+				sub r10d, dCameraY
+			; get curr actor sprite size
+				mov rcx, rax
+				call GetActorSprite
+				mov eax, dword ptr [rax+18h]
+				shr eax, 1 ; half it
+				inc eax
+			; set X coords
+				mov r9d, r8d
+				sub r8d, eax
+				add r9d, eax
+			; set Y coords
+				mov r11d, r10d
+				sub r10d, eax
+				add r11d, eax
+			; construct Rect struct
+				mov dword ptr [rsp+20h], r8d
+				mov dword ptr [rsp+28h], r9d
+				mov dword ptr [rsp+24h], r10d
+				mov dword ptr [rsp+2Ch], r11d
+			; drawcall border square	
+				mov r8, 8
+				lea rdx, [rsp+20h] ; not sure this is quite right?
+				mov rcx, r15
+				call FrameRect
+		skip_hover_border:
+
 	; render selection border if show select bounds is true
 		cmp dShouldShowSelectBounds, 0
 		je b32
@@ -141,6 +185,9 @@ ActorSelectRender ENDP
 
 ActorSelectTick PROC
 	sub rsp, 8
+	; find our currently hovered actor
+		call SetHoveredActor
+
 	; if left mouse pressed
 		lea rcx, dKeyMap
 		mov al, byte ptr [rcx+2]
@@ -180,11 +227,25 @@ ActorSelectTick PROC
 					b27:
 				; either select unit or rectangle select
 				cmp dShouldShowSelectBounds, 0
-				jz b25 ; drag rectangle select
+				; drag rectangle select
+				jz b25 
 					call SelectActorWithinRect
 					jmp b26
-				b25: ; single click select
-					call SelectActorAt
+				; single click select
+				b25: 
+					; verify we have enough room in our selection buffer
+						cmp dSelectedActorsCount, MAX_SELECTED_ACTORS
+						je b26
+					; verify that we are hovering over an actor
+						cmp dHoveredActor, 0
+						je b26
+					; write hovered actor
+						lea rcx, dSelectedActorsList
+						mov edx, dSelectedActorsCount
+						mov rax, dHoveredActor
+						mov qword ptr [rcx+rdx*8], rax
+					; inc selected count
+						inc dSelectedActorsCount
 				b26:
 				; cleanup
 					mov dMouseHeldDownFor, 0
@@ -264,17 +325,19 @@ SelectActorWithinRect PROC
 		ret
 SelectActorWithinRect ENDP
 
+
+
+
+
 ; no inputs
-SelectActorAt PROC
+SetHoveredActor PROC
 	; config locals
 		push r12 ; ptr to current actor
 		lea r12, dActorList 
 		mov rsi, r12
 		add rsi, dLastActorIndex ; last address
 		xor rdi, rdi ; actor index
-	; verify we have enough room in our selection buffer
-		cmp dSelectedActorsCount, MAX_SELECTED_ACTORS
-		je return
+		mov dHoveredActor, 0
 	; convert mouse position to world position
 		mov r8d, dMouseX
 		add r8d, dCameraX
@@ -317,11 +380,7 @@ SelectActorAt PROC
 								shl rcx, 32
 								mov eax, dword ptr [r12]
 								or rax, rcx
-								lea rcx, dSelectedActorsList
-								mov edx, dSelectedActorsCount
-								mov qword ptr [rcx+rdx*8], rax
-								; inc selected count
-								inc dSelectedActorsCount
+								mov dHoveredActor, rax
 								jmp return
 			b28:
 		; next iteration
@@ -331,7 +390,7 @@ SelectActorAt PROC
 	return:
 		pop r12
 		ret
-SelectActorAt ENDP
+SetHoveredActor ENDP
 
 ; [outputs]
 ; r8d:  low_x
