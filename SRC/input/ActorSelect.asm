@@ -23,6 +23,9 @@
 	ActorPtrFromHandle PROTO
 ; windows funcs
 	FrameRect PROTO
+; exports
+	public dSelectedActorsList
+	public dSelectedActorsCount
 
 .data
 

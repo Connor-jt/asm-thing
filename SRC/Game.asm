@@ -12,6 +12,7 @@ ActorBankCreate PROTO
 CameraTick PROTO
 ActorBankTick PROTO
 ActorSelectTick PROTO
+ActorInstructionsTick PROTO
 
 .data
 cLMouseDownStr word 'L','e','f','t',' ','m','o','u','s','e',' ','w','a','s',' ','p','r','e','s','s','e','d','!','!',0
@@ -27,6 +28,8 @@ GameTick PROC
 		call ActorBankTick
 	; run actor selection logic
 		call ActorSelectTick
+	; run selected actor interaction logic
+		call ActorInstructionsTick
 
 	
 	; [DEBUG] spawn actor when SHIFT + LMB
