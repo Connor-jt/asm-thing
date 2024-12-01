@@ -38,6 +38,10 @@ LoadBrushes PROC
 		call CreateSolidBrush
 		mov Brush_HealthBackground, eax
 	; unit hover green
+		mov rcx, Color_ActorHoverGreen
+		call CreateSolidBrush
+		mov Brush_ActorHoverGreen, eax
+	; unit selected green
 		mov rcx, Color_ActorSelected
 		call CreateSolidBrush
 		mov Brush_ActorSelected, eax

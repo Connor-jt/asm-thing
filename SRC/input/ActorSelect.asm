@@ -27,6 +27,9 @@
 ; exports
 	public dSelectedActorsList
 	public dSelectedActorsCount
+; extern colors
+	extern Brush_ActorHoverGreen : dword
+	extern Brush_ActorSelected : dword
 
 .data
 
@@ -106,7 +109,7 @@ ActorSelectRender PROC
 				mov dword ptr [rsp+24h], r10d
 				mov dword ptr [rsp+2Ch], r11d
 			; drawcall border square	
-				mov r8, 26
+				mov r8d, Brush_ActorSelected
 				lea rdx, [rsp+20h] ; not sure this is quite right?
 				mov rcx, r15
 				call FrameRect
@@ -152,7 +155,7 @@ ActorSelectRender PROC
 				mov dword ptr [rsp+24h], r10d
 				mov dword ptr [rsp+2Ch], r11d
 			; drawcall border square	
-				mov r8, 8
+				mov r8d, Brush_ActorHoverGreen
 				lea rdx, [rsp+20h] ; not sure this is quite right?
 				mov rcx, r15
 				call FrameRect
