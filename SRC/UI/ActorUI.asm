@@ -11,6 +11,8 @@
 	GetActorSprite PROTO
 ; extern windows funcs
 	FillRect PROTO
+; colors
+	extern Brush_HealthGreen : dword
 
 .code
 
@@ -108,7 +110,7 @@ DrawActorHealth PROC
 			mov dword ptr [rsp+28h],  r9d
 			mov dword ptr [rsp+2Ch], r11d
 		; draw
-			mov r8, 29 ; hbrush 
+			mov r8d, Brush_HealthGreen ; hbrush 
 			mov rdx, rsp 
 			add rdx, 20h
 			mov rcx, r15 ; hdc

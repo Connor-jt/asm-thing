@@ -156,6 +156,7 @@
     <MASM Include="SRC\UI\ActorUI.asm" />
     <MASM Include="SRC\UI\ConsoleUI.asm" />
     <MASM Include="SRC\UI\DebugUI.asm" />
+    <MASM Include="SRC\UI\res\BrushBank.asm" />
     <MASM Include="SRC\utils.asm" />
   </ItemGroup>
   <ItemGroup>

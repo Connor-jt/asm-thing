@@ -60,6 +60,9 @@
     <MASM Include="SRC\UI\ActorUI.asm">
       <Filter>Source Files</Filter>
     </MASM>
+    <MASM Include="SRC\UI\res\BrushBank.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">

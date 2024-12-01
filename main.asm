@@ -19,6 +19,7 @@ Sleep PROTO
 LoadImageW PROTO
 
 LoadSpriteLibrary PROTO ; sprite library entry
+LoadBrushes PROTO
 TestRender PROTO ; render entry
 GameTick PROTO
 ConsolePrint PROTO 
@@ -67,6 +68,7 @@ main PROC
 	sub rsp, 28h	; align stack + 'shadow space'
 	; load app resources
 		call LoadSpriteLibrary
+		call LoadBrushes
 	; [DEBUG] print out hello world
 		mov rdx, 1
 		lea rcx, cHelloStr
