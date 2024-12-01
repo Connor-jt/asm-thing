@@ -1,4 +1,5 @@
 DrawActorSprite	PROTO
+DrawActorHealth PROTO
 ActorTick PROTO
 
 public dActorList
@@ -142,6 +143,7 @@ ActorBankRender PROC
 				; r12: actor ptr (pass through)
 				; rcx: hdc (pass through)
 				call DrawActorSprite
+				call DrawActorHealth
 			block4:
 		; next iteration
 			add r12, SIZEOF_Actor

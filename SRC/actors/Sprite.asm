@@ -84,50 +84,6 @@ SetSpriteDevice PROC
 		ret
 SetSpriteDevice ENDP
 
-; r15: x
-; r14: y
-; r13: sprite_object (pass through)
-; r12: hdc (pass through)
-;RenderSprite PROC
-;	sub rsp, 8
-;	; if bitmap invalid, skip
-;		cmp qword ptr [r13], 0 ; check bitmap
-;		je sprite_draw_end
-;		cmp qword ptr [r13+8], 0 ; check maskmap
-;		je sprite_draw_end
-;		cmp dword ptr [r13+18h], 0 ; check size
-;		je sprite_draw_end
-;
-;		call SetSpriteDevice
-;		
-;		xor rax, rax ; TOOD: cleanup unnecessary casts
-;		mov eax, dword ptr [r13+18h] ; grab the size 
-;		mov rcx, qword ptr [r13+10h] ; + bitmap hdmem
-;		mov rdx, qword ptr [r13+8] ; + maskmap 
-;
-;		push 0AACC0020h ; copy src foreground, maintain dst background ; copy op (00CC0020h)
-;		
-;		push 0 ; mask y
-;		push 0 ; mask x
-;		push rdx ; mask hdc src
-;
-;		push 0 ; src y
-;		push 0 ; src x
-;		push rcx ; hdc src
-;
-;		push rax ; height
-;		mov r9, rax ; width
-;		mov r8, 0 ; y
-;		mov rdx, 0 ; x
-;		mov rcx, r12 ; hdc
-;		sub rsp, 20h
-;		call MaskBlt
-;		add rsp, 60h
-;	sprite_draw_end:
-;		add rsp, 8
-;		ret
-;RenderSprite ENDP
-
 ; r12: actor ptr (paas through)
 ; rcx: hdc
 DrawActorSprite PROC

@@ -59,6 +59,12 @@ ActorTick PROC
 				jne b16
 					cmp r11d, 0
 					jne b16
+						; subtract health
+						dec byte ptr [r12+6] ; health
+						;cmp byte ptr [r12+6], 0
+						jnz skip_objective
+
+						; die if health <= 0 
 						mov rax, 1
 						ret	
 				b16:
