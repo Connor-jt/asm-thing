@@ -21,6 +21,7 @@
 	ConsolePrint PROTO
 	ConsolePrintNumber PROTO
 	ActorPtrFromHandle PROTO
+	ForceDrawActorHealth PROTO
 ; windows funcs
 	FrameRect PROTO
 ; exports
@@ -121,6 +122,7 @@ ActorSelectRender PROC
 		; fetch current actor ptr
 			mov rcx, dHoveredActor
 			call ActorPtrFromHandle
+			mov r12, rax
 		; if actor null, skip
 			test rax, rax
 			jz b31
@@ -154,6 +156,9 @@ ActorSelectRender PROC
 				lea rdx, [rsp+20h] ; not sure this is quite right?
 				mov rcx, r15
 				call FrameRect
+		; render healthbar for hovered actor
+			mov rcx, r15
+			call ForceDrawActorHealth
 		skip_hover_border:
 
 	; render selection border if show select bounds is true

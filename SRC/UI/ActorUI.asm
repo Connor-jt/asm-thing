@@ -14,13 +14,12 @@
 
 .code
 
+
+
 ; r12: actor ptr (pass through)
 ; rcx: hdc (pass through)
-; rdx: actor ptr
-; rcx: hdc
-DrawActorHealth PROC
+TryDrawActorHealth PROC
 	; config locals
-		sub rsp, 8
 		push rbx ; health
 		push r15 ; HDC
 		mov r15, rcx
@@ -33,6 +32,40 @@ DrawActorHealth PROC
 		mov al, byte ptr [r12+6]
 		cmp bh, al
 		je return
+	; draw it
+		call DrawActorHealth
+	return:
+		mov rcx, r15 ; because hdc is pass through, we need to restore its value
+		pop r15
+		pop rbx
+		ret
+TryDrawActorHealth ENDP
+
+; r12: actor ptr (pass through)
+; rcx: hdc (pass through)
+ForceDrawActorHealth PROC
+	; config locals
+		push rbx ; health
+		push r15 ; HDC
+		mov r15, rcx
+	; get unit details
+		mov ecx, dword ptr [r12]
+		shr ecx, 21
+		call GetActorStats
+		mov rbx, rax
+	; draw
+		call DrawActorHealth
+	; return
+		mov rcx, r15 ; because hdc is pass through, we need to restore its value
+		pop r15
+		pop rbx
+		ret
+ForceDrawActorHealth ENDP
+
+; r12: actor ptr (pass through)
+; r15: hdc
+; rbx: actor details
+DrawActorHealth PROC
 	; skip if unit is off-screen
 		; verify actor is on screen
 			mov r8d, dword ptr [r12+8]
@@ -82,10 +115,6 @@ DrawActorHealth PROC
 			call FillRect
 			add rsp, 30h
 	return:
-		mov rcx, r15 ; because hdc is pass through, we need to restore its value
-		pop r15
-		pop rbx
-		add rsp, 8
 		ret
 DrawActorHealth ENDP
 
