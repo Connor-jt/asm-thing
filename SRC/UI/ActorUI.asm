@@ -13,6 +13,7 @@
 	FillRect PROTO
 ; colors
 	extern Brush_HealthGreen : dword
+	extern Brush_HealthBackground : dword
 
 .code
 
@@ -94,14 +95,14 @@ DrawActorHealth PROC
 			sub r10d, eax ; subtract to bring it above the actor
 			sub r10d, 10 ; mov it an extra 10 pixels up
 			mov r11d, r10d
-			add r11d, 5 ; 5 pixels height
+			add r11d, 7 ; 5 pixels height
 		; determine max width of the bar
 			movzx eax, bh
-			shr eax, 1 
+			shr eax, 1
+			inc eax ; this is our 1px padding (left & right)
 		; config x axis 
-			sub r8d, eax
 			mov r9d, r8d
-			movzx eax, byte ptr [r12+6]
+			sub r8d, eax
 			add r9d, eax
 		; create rectangle
 			sub rsp, 30h
@@ -109,7 +110,24 @@ DrawActorHealth PROC
 			mov dword ptr [rsp+24h], r10d
 			mov dword ptr [rsp+28h],  r9d
 			mov dword ptr [rsp+2Ch], r11d
-		; draw
+		; draw background
+			mov r8d, Brush_HealthBackground ; hbrush 
+			mov rdx, rsp 
+			add rdx, 20h
+			mov rcx, r15 ; hdc
+			call FillRect
+		; reconfig y axis
+			inc dword ptr [rsp+24h]
+			dec dword ptr [rsp+2Ch]
+		; reconfig x axis 
+			mov r8d, dword ptr [rsp+20h]
+			inc r8d
+			mov r9d, r8d
+			movzx eax, byte ptr [r12+6]
+			add r9d, eax
+			mov dword ptr [rsp+20h],  r8d
+			mov dword ptr [rsp+28h],  r9d
+		; draw health percentage
 			mov r8d, Brush_HealthGreen ; hbrush 
 			mov rdx, rsp 
 			add rdx, 20h
