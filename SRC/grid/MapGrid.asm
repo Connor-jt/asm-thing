@@ -2,7 +2,7 @@
 
 .data
 
-Grid qword 4096 dup(0) ; 32kb !!
+Grid qword 4096 dup(0) ; 64x64 ; 32kb !!
 
 ; LAYERS:
 ;	grid		: topmost layer  64x64
@@ -35,31 +35,53 @@ GridCheckTile PROC
 	; get quadrant layer coords (indexes the tile)
 		mov r8b, cx
 		mov ax,  dx
-		and r8b, 31
+		and r8,  31 ; clear the whole register
 		and ax,  31
 		; combine Y into X
 		shl  ax, 5
 		or  r8b, ax 
 	; get section layer coords (indexes the quadrant)
-		sar cx, 5
-		sar dx, 5
+		shr cx, 5
+		shr dx, 5
 		mov r9b, cx
 		mov ax,  dx
-		and r9b, 31
+		and r9,  31 ; clear the whole register
 		and ax,  31
 		; combine Y into X
 		shl ax,  5
 		or  r9b, ax 
 	; get grid layer coords
-		sar cx, 5
-		sar dx, 5
+		shr cx, 5
+		shr dx, 5
+		and rcx, 63 ; clear the rest of the bits in the register
 		; combine Y into X
 		shl dx, 6
 		or  cx, dx 
 		
-		
+	; check grid index (section) is valid
+		lea rax, Grid
+		mov rdx, qword ptr [rax+rcx*8]
+		cmp rdx, 0
+		je return_fail
+	; check section index (quad) is valid
+		mov rdx, qword ptr [rdx+r8*8]
+		cmp rdx, 0
+		je return_fail
+	; check content of quad index (tile)
+		mov rdx, qword ptr [rdx+r9*8]
+		test rdx, 8000000000000000h
+		; else if content is not an actor
+		; TODO: we can store an enum or something for any sort of obstacle here
+		jz return_fail
+		; if content is a actor
+			
+		jmp return_clear
 
-
+	return_clear:
+		mov qword ptr [rdx+r9*8], 0 
+	return_fail:
+		xor rax, rax
+		ret
 GridCheckTile ENDP
 
 

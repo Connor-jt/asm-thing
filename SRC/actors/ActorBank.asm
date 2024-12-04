@@ -23,7 +23,14 @@ dFirstFreeIndex qword 0 ; index * 24
 ;	Ch, 4 : position_y
 ;  10h, 8 : target (either a unit handle or x,y coords)
 
+
 ; Actor Handle
+; 80000000 00000000 : reserved (but should always be 0)
+; 7FFFFFFF 00000000 : actor index
+; 00000000 FFFFFFFF : actor handle type
+;       +4       +0
+
+; Actor Handle type
 ; 11111111 11100000 00000000 00000000 : entity type (allowing 2k types)
 ; 00000000 00010000 00000000 00000000 : is valid
 ; 00000000 00001111 11111111 11111111 : index handle (allowing 1 mil reuses)
