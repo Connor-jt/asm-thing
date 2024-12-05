@@ -69,6 +69,15 @@ GridCheckTile PROC
 		je return_fail
 	; check content of quad index (tile)
 		mov rdx, qword ptr [rdx+r9*8]
+		; if tile is non-walkable then fail
+			test rdx, 2000000000000h
+			jz return_fail
+		; get tile data
+			mov rax, rdx
+			shr rax, 48
+				
+		; get potential actor part
+
 		test rdx, 8000000000000000h
 		; else if content is not an actor
 		; TODO: we can store an enum or something for any sort of obstacle here

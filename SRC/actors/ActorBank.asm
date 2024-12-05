@@ -25,8 +25,8 @@ dFirstFreeIndex qword 0 ; index * 24
 
 
 ; Actor Handle
-; 80000000 00000000 : reserved (but should always be 0)
-; 7FFFFFFF 00000000 : actor index
+; FFFF0000 00000000 : reserved for sharing data in grid structs (should always be 0)
+; 0000FFFF 00000000 : actor index (so max 65,355 actors) NOTE: we will probably cap actors out at 4000 (so we use 12 bits)
 ; 00000000 FFFFFFFF : actor handle type
 ;       +4       +0
 
@@ -39,8 +39,7 @@ dFirstFreeIndex qword 0 ; index * 24
 ; Actor State
 ; 11000000 00000000 : animation state (00: none, 01: stepping, 10: actioning, 11: dying)
 ; 00111000 00000000 : direction/death animation step
-; 00000111 00000000 : ???
-; 00000000 11000000 : ???
+; 00000111 11000000 : ???
 ; 00000000 00110000 : objective state (00: none, 01: moveto, 10: attack, 11: ???)
 ; 00000000 00001111 : team
 ; +1       +0
