@@ -10,7 +10,16 @@ Grid qword 4096 dup(0) ; 64x64 ; 32kb !!
 ;	quadrant	: data layer     32x32
 
 
+; Grid data
+; 11111111 00000000 | 0000 00000000 : other bits??
+; 00000000 11111100 | 0000 00000000 : damage taken (63 means fully walkable)
+; 00000000 00000010 | 0000 00000000 : has actor_cluster
+; 00000000 00000001 | 0000 00000000 : has actor
+; 00000000 00000000 | FFFF FFFFFFFF : actor handle | actor cluster handle
+; +7       +6         +4   +0
 
+
+; 
 .code
 
 
@@ -70,18 +79,17 @@ GridCheckTile PROC
 	; check content of quad index (tile)
 		mov rdx, qword ptr [rdx+r9*8]
 		; if tile is non-walkable then fail
-			test rdx, 2000000000000h
-			jz return_fail
-		; get tile data
-			mov rax, rdx
-			shr rax, 48
+			mov rcx, rdx
+			and rcx, 00FC000000000000h
+			cmp rcx, 00FC000000000000h
+			jne return_fail
+
 				
 		; get potential actor part
 
-		test rdx, 8000000000000000h
+		test rdx, 0001000000000000h
 		; else if content is not an actor
-		; TODO: we can store an enum or something for any sort of obstacle here
-		jz return_fail
+		jnz return_fail
 		; if content is a actor
 			
 		jmp return_clear
