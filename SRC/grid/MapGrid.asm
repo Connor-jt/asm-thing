@@ -30,9 +30,11 @@ Grid qword 4096 dup(0) ; 64x64 ; 32kb !!
 ; func release tile
 
 ; func check tile ; returns actor handle, with modified not_actor bit (highest most bit)
+
+
 ; dx: Y
 ; cx: X
-GridCheckTile PROC
+GridAccessTile PROC
 	; r8b: quad array index
 	; r9b: section array index
 	; cx: grid array index
@@ -66,7 +68,7 @@ GridCheckTile PROC
 		; combine Y into X
 		shl dx, 6
 		or  cx, dx 
-		
+
 	; check grid index (section) is valid
 		lea rax, Grid
 		mov rdx, qword ptr [rax+rcx*8]
@@ -76,8 +78,21 @@ GridCheckTile PROC
 		mov rdx, qword ptr [rdx+r8*8]
 		cmp rdx, 0
 		je return_fail
-	; check content of quad index (tile)
+	; get content of quad index (tile)
 		mov rdx, qword ptr [rdx+r9*8]
+	return_fail:
+		xor rax, rax
+		ret 
+GridAccessTile ENDP
+
+; dx: Y
+; cx: X
+GridIsTileClear PROC
+	sub rsp, 8
+	call GridAccessTile
+	add rsp, 8
+
+	
 		; if tile is non-walkable then fail
 			mov rcx, rdx
 			and rcx, 00FC000000000000h
@@ -96,10 +111,10 @@ GridCheckTile PROC
 
 	return_clear:
 		mov qword ptr [rdx+r9*8], 0 
-	return_fail:
-		xor rax, rax
-		ret
-GridCheckTile ENDP
+	ret
+GridIsTileClear ENDP
+	
+
 
 
 ; malloc new section
