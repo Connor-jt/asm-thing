@@ -88,30 +88,26 @@ GridAccessTile ENDP
 ; dx: Y
 ; cx: X
 GridIsTileClear PROC
-	sub rsp, 8
-	call GridAccessTile
-	add rsp, 8
-
-	
-		; if tile is non-walkable then fail
-			mov rcx, rdx
-			and rcx, 00FC000000000000h
-			cmp rcx, 00FC000000000000h
-			jne return_fail
-
-				
-		; get potential actor part
-
-		test rdx, 0001000000000000h
-		; else if content is not an actor
-		jnz return_fail
-		; if content is a actor
-			
-		jmp return_clear
-
-	return_clear:
-		mov qword ptr [rdx+r9*8], 0 
-	ret
+	; get tile data
+		sub rsp, 8
+		call GridAccessTile
+	; if tile is non-walkable then fail
+		mov rcx, rdx
+		and rcx, 00FC000000000000h
+		cmp rcx, 00FC000000000000h
+		jne tile_occupied
+	; get actor on tile bits
+		and rdx, 0003000000000000h
+		cmp rdx, 0
+		jne tile_occupied
+	; else tile is free to use
+		mov rax, 1
+		jmp return
+	tile_occupied:
+		xor rax, rax
+	return:
+		add rsp, 8
+		ret
 GridIsTileClear ENDP
 	
 
