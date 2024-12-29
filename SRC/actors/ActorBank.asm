@@ -10,7 +10,7 @@ PUBLIC SIZEOF_Actor
 
 .data
 
-dActorList byte 120000 dup(0) ; 24 bytes x 5000 actors
+dActorList byte 98256 dup(0) ; 24 bytes x 4094 actors ; we dont use the last one because the index is unusable, as its -1, which we will use for handles that are invalid
 dLastActorIndex qword 0 ; index * 24
 dFirstFreeIndex qword 0 ; index * 24
 
@@ -24,40 +24,26 @@ dFirstFreeIndex qword 0 ; index * 24
 ;	Ah, 2 : tile_y
 ;	Ch, 2 : position_state
 ;	Eh, 2 : ???
-;  10h, 8 : target (either a unit handle or x,y coords)
-
-; // OLD //
-;	8h, 4 : position_x
-;	Ch, 4 : position_y
-
-
+;  10h, 8 : target data (either a unit handle or x,y coords)
 
 ; Actor Handle
-; FFFF0000 00000000 : reserved for sharing data in grid structs (should always be 0)
-; 0000FFFF 00000000 : actor index (so max 65,355 actors) NOTE: we will probably cap actors out at 4000 (so we use 12 bits)
-; 00000000 FFFFFFFF : actor handle type
-;       +4       +0
-
-; Actor Handle type
-; 11111111 11100000 00000000 00000000 : entity type (allowing 2k types)
-; 00000000 00010000 00000000 00000000 : is valid
-; 00000000 00001111 11111111 11111111 : index handle (allowing 1 mil reuses)
+; 11111111 11110000 00000000 00000000 : entity index (if set to an incorrect value such as -1 on the actor, will invalidate all references)
+; 00000000 00001111 11111111 00000000 : index handle (allowing 4k reuses)
+; 00000000 00000000 00000000 11111111 : actor handle type (allowing 256 types)
 ; +3       +2       +1       +0
 
 ; Actor State
-; 11000000 00000000 : animation state (00: none, 01: stepping, 10: actioning, 11: dying)
-; 00111000 00000000 : direction/death animation step
-; 00000111 11001110 : ???
-; 00000000 00110000 : objective state (00: none, 01: moveto, 10: attack, 11: ???)
-; 00000000 00000001 : team
-; +1       +0
+; 11000000 : animation state (00: none, 01: stepping, 10: actioning, 11: dying)
+; 00111000 : direction/death animation step
+; 00000110 : objective state (00: none, 01: moveto, 10: attack, 11: ???)
+; 00000001 : team
 
 ; Actor Position State
-; 11111000 00000000 : tile_offset_x
-; 00000111 11000000 : tile_offset_y
-; 00000000 00110000 : queued_steps (00: none, 01: step_1 is valid, 10: step_2 is valid, 11: ???)
-; 00000000 00001100 : queued_step_1
-; 00000000 00000011 : queued_step_2
+; 11000000 00000000 : queued_steps (00: none, 01: step_1 is valid, 10: step_2 is valid, 11: ???)
+; 00110000 00000000 : queued_step_1
+; 00001100 00000000 : queued_step_2
+; 00000011 11100000 : tile_offset_x
+; 00000000 00011111 : tile_offset_y
 ; +1       +0
 
 
