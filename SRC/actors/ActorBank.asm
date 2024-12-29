@@ -16,12 +16,14 @@ dFirstFreeIndex qword 0 ; index * 24
 
 ; Actor struct
 ;	0h, 4 : handle
-;	4h, 2 : state
+;	4h, 1 : state
+;	5h, 1 : ???
 ;	6h, 1 : health
 ;	7h, 1 : action cooldown
 ;	8h, 2 : tile_x
 ;	Ah, 2 : tile_y
-;	Ch, 4 : position_state
+;	Ch, 2 : position_state
+;	Eh, 2 : ???
 ;  10h, 8 : target (either a unit handle or x,y coords)
 
 ; // OLD //
