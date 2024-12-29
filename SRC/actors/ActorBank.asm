@@ -19,9 +19,15 @@ dFirstFreeIndex qword 0 ; index * 24
 ;	4h, 2 : state
 ;	6h, 1 : health
 ;	7h, 1 : action cooldown
+;	8h, 2 : tile_x
+;	Ah, 2 : tile_y
+;	Ch, 4 : position_state
+;  10h, 8 : target (either a unit handle or x,y coords)
+
+; // OLD //
 ;	8h, 4 : position_x
 ;	Ch, 4 : position_y
-;  10h, 8 : target (either a unit handle or x,y coords)
+
 
 
 ; Actor Handle
@@ -39,9 +45,17 @@ dFirstFreeIndex qword 0 ; index * 24
 ; Actor State
 ; 11000000 00000000 : animation state (00: none, 01: stepping, 10: actioning, 11: dying)
 ; 00111000 00000000 : direction/death animation step
-; 00000111 11000000 : ???
+; 00000111 11001110 : ???
 ; 00000000 00110000 : objective state (00: none, 01: moveto, 10: attack, 11: ???)
-; 00000000 00001111 : team
+; 00000000 00000001 : team
+; +1       +0
+
+; Actor Position State
+; 11111000 00000000 : tile_offset_x
+; 00000111 11000000 : tile_offset_y
+; 00000000 00110000 : queued_steps (00: none, 01: step_1 is valid, 10: step_2 is valid, 11: ???)
+; 00000000 00001100 : queued_step_1
+; 00000000 00000011 : queued_step_2
 ; +1       +0
 
 
