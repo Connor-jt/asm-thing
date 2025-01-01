@@ -30,7 +30,7 @@ dFirstFreeIndex qword 0 ; index * 24
 ;  10h, 8 : target data (either a unit handle or x,y coords)
 
 ; Actor Handle
-; 11111111 11110000 00000000 00000000 : entity index (if set to -1 on the actor, it will invalidate all references)
+; 11111111 11110000 00000000 00000000 : entity index (if set to -1 on the actor, it will invalidate the actor)
 ; 00000000 00001111 11111111 00000000 : index handle (allowing 4k reuses)
 ; 00000000 00000000 00000000 11111111 : actor handle type (allowing 256 types)
 ; +3       +2       +1       +0
@@ -159,8 +159,8 @@ ActorBankTick PROC
 			cmp r12, r13
 			je loop_end
 		; if current actor is valid
-			test dword ptr [r12], 0100000h
-			jz block3
+			cmp dword ptr [r12], 0FFF00000h
+			jge block3
 				call ActorTick
 				; if function returned value other than 0, then delete actor
 				cmp rax, 0
@@ -191,8 +191,8 @@ ActorBankRender PROC
 			cmp r12, r13
 			je loop_end
 		; if current actor is valid
-			test dword ptr [r12], 0100000h
-			jz block4
+			cmp dword ptr [r12], 0FFF00000h
+			jge block4
 				; r12: actor ptr (pass through)
 				; rcx: hdc (pass through)
 				call DrawActorSprite

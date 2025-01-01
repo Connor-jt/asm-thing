@@ -291,8 +291,8 @@ SelectActorWithinRect PROC
 			cmp r12, rsi
 			je return
 		; if current actor is valid
-			test dword ptr [r12], 0100000h
-			jz b20
+			cmp dword ptr [r12], 0FFF00000h
+			jge b20
 				; get actor pos
 					mov rcx, r12
 					call GetActorScreenPos
@@ -353,8 +353,8 @@ SetHoveredActor PROC
 			cmp r12, rsi
 			je return
 		; if current actor is valid
-			test dword ptr [r12], 0100000h
-			jz b28
+			cmp dword ptr [r12], 0FFF00000h
+			jge b28
 				; fetch actor size
 					mov rcx, r12
 					call GetActorSprite
