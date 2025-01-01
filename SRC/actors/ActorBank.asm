@@ -2,6 +2,9 @@ DrawActorSprite	PROTO
 TryDrawActorHealth PROTO
 ActorTick PROTO
 
+extern dCameraX : dword
+extern dCameraY : dword
+
 public dActorList
 public dLastActorIndex
 
@@ -82,8 +85,8 @@ GetActorWorldPos PROC
 		movsx rax, word ptr [rcx+8]
 		movsx rdx, word ptr [rcx+10]
 	; adjust for pixel position
-		shl rax, 6
-		shl rdx, 6
+		shl rax, 5
+		shl rdx, 5
 	; apply Y local tile offsets
 		mov r8b, byte ptr [rdx+12]
 		and r8b, 31
@@ -101,12 +104,12 @@ GetActorWorldPos ENDP
 ; out rax: x pos
 ; out rdx: y pos
 GetActorScreenPos PROC
-	sub rsp, 8
-	call GetActorWorldPos
-	sub rax, dCameraX
-	sub rdx, dCameraY
+	; get actual position
+		call GetActorWorldPos
+	; adjust for screen space
+		sub rax, dCameraX
+		sub rdx, dCameraY
 	; return
-		add rsp, 8
 		ret
 GetActorScreenPos ENDP
 

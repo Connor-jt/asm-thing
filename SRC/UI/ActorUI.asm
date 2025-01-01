@@ -9,6 +9,7 @@
 ; extern custom funcs
 	GetActorStats PROTO
 	GetActorSprite PROTO
+	GetActorScreenPos PROTO
 ; extern windows funcs
 	FillRect PROTO
 ; colors
@@ -36,7 +37,7 @@ TryDrawActorHealth PROC
 		cmp bh, al
 		je return
 	; draw it
-		call DrawActorHealth
+		call DrawActorHealth ; warning: mal-aligned stack
 	return:
 		mov rcx, r15 ; because hdc is pass through, we need to restore its value
 		pop r15
@@ -57,7 +58,7 @@ ForceDrawActorHealth PROC
 		call GetActorStats
 		mov rbx, rax
 	; draw
-		call DrawActorHealth
+		call DrawActorHealth ; warning: mal-aligned stack
 	; return
 		mov rcx, r15 ; because hdc is pass through, we need to restore its value
 		pop r15
@@ -68,13 +69,13 @@ ForceDrawActorHealth ENDP
 ; r12: actor ptr (pass through)
 ; r15: hdc
 ; rbx: actor details
-DrawActorHealth PROC
+DrawActorHealth PROC ; stack mal-aligned
 	; skip if unit is off-screen
 		; verify actor is on screen
-			mov r8d, dword ptr [r12+8]
-			mov r10d, dword ptr [r12+12]
-			sub r8d, dCameraX
-			sub r10d, dCameraY
+			mov rcx, r12
+			call GetActorScreenPos
+			sub r8d, eax
+			sub r10d, edx
 		; if X off-screen
 			cmp r8d, 0
 			jl return
@@ -87,6 +88,7 @@ DrawActorHealth PROC
 			jge return
 	; get coords to draw healthbar to
 		; get actor sprite size
+			sub rsp, 30h
 			mov rcx, r12
 			call GetActorSprite
 			mov eax, dword ptr [rax+18h]
@@ -105,7 +107,6 @@ DrawActorHealth PROC
 			sub r8d, eax
 			add r9d, eax
 		; create rectangle
-			sub rsp, 30h
 			mov dword ptr [rsp+20h],  r8d
 			mov dword ptr [rsp+24h], r10d
 			mov dword ptr [rsp+28h],  r9d
@@ -133,7 +134,7 @@ DrawActorHealth PROC
 			add rdx, 20h
 			mov rcx, r15 ; hdc
 			call FillRect
-			add rsp, 30h
+			add rsp, 38h
 	return:
 		ret
 DrawActorHealth ENDP

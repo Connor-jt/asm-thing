@@ -76,10 +76,10 @@ ActorSelectRender PROC
 				; r10d: low_y
 				; r11d: high_y
 				; verify actor is on screen
-					mov r8d, dword ptr [r14+8]
-					mov r10d, dword ptr [r14+12]
-					sub r8d, dCameraX
-					sub r10d, dCameraY
+					mov rcx, r12
+					call GetActorScreenPos
+					mov r8d, eax
+					mov r10d, edx
 				; if X off-screen
 					cmp r8d, 0
 					jl b31
@@ -131,10 +131,10 @@ ActorSelectRender PROC
 			jz b31
 		; render border
 			; verify actor is on screen
-				mov r8d, dword ptr [rax+8]
-				mov r10d, dword ptr [rax+12]
-				sub r8d, dCameraX
-				sub r10d, dCameraY
+				mov rcx, r12
+				call GetActorScreenPos
+				mov r8d, eax
+				mov r10d, edx
 			; get curr actor sprite size
 				mov rcx, rax
 				call GetActorSprite
@@ -283,12 +283,8 @@ SelectActorWithinRect PROC
 	; get select rect
 		call GetSelectRect
 		test rax, rax
+		push r8
 		jnz return
-	; convert screen positions to world positions
-		add r8d, dCameraX
-		add r9d, dCameraX
-		add r10d, dCameraY
-		add r11d, dCameraY
 	lloop:
 		; break if we reached the last valid index
 			cmp r12, rsi
@@ -296,19 +292,20 @@ SelectActorWithinRect PROC
 		; if current actor is valid
 			test dword ptr [r12], 0100000h
 			jz b20
-				mov eax, dword ptr [r12+8]
+				; get actor pos
+					mov rcx, r12
+					call GetActorScreenPos
 				; if x >= rect_low_x (r8d)
-				cmp eax, r8d
+				cmp eax, dword ptr [rsp] ; access our pushed r8
 				jl b20
 					; if x <= rect_high_x (r9d)
 					cmp eax, r9d
 					jg b20
 						; if y > rect_low_y (r10d)
-						mov eax, dword ptr [r12+12]
-						cmp eax, r10d
+						cmp edx, r10d
 						jl b20
 							; if y < rect_high_y (r11d)
-							cmp eax, r11d
+							cmp edx, r11d
 							jg b20
 								; verify we have enough room in our selection buffer
 								cmp dSelectedActorsCount, MAX_SELECTED_ACTORS
@@ -329,6 +326,7 @@ SelectActorWithinRect PROC
 			inc rdi
 			jmp lloop
 	return:
+		add rsp, 8 ; pop r8
 		pop r12
 		ret
 SelectActorWithinRect ENDP
@@ -346,11 +344,9 @@ SetHoveredActor PROC
 		add rsi, dLastActorIndex ; last address
 		xor rdi, rdi ; actor index
 		mov dHoveredActor, 0
-	; convert mouse position to world position
-		mov r8d, dMouseX
-		add r8d, dCameraX
+	; store mouse pos
+		mov r11d, dMouseX
 		mov r9d, dMouseY
-		add r9d, dCameraY
 	lloop:
 		; break if we reached the last valid index
 			cmp r12, rsi
@@ -363,25 +359,26 @@ SetHoveredActor PROC
 					call GetActorSprite
 					mov r10d, dword ptr [rax+18h] 
 					shr r10d, 1
-				; if x - size <= click_x (r8d)
-				mov eax, dword ptr [r12+8]
-				sub eax, r10d
-				cmp eax, r8d
+				; fetch actor pos
+					mov rcx, r12
+					call GetActorScreenPos
+				; if x - size <= click_x (r11d)
+				mov r8d, eax
+				sub r8d, r10d
+				cmp r8d, r11d
 				jg b28
-					; if x + size >= click_x (r8d)
-					mov eax, dword ptr [r12+8]
+					; if x + size >= click_x (r11d)
 					add eax, r10d
-					cmp eax, r8d
+					cmp eax, r11d
 					jl b28
 						; if y - size <= click_y (r9d)
-						mov eax, dword ptr [r12+12]
-						sub eax, r10d
-						cmp eax, r9d
+						mov r8d, edx
+						sub r8d, r10d
+						cmp r8d, r9d
 						jg b28
 							; if y + size >= click_y (r9d)
-							mov eax, dword ptr [r12+12]
-							add eax, r10d
-							cmp eax, r9d
+							add edx, r10d
+							cmp edx, r9d
 							jl b28
 								; get actor index & handle and write to thing buffer
 								mov rcx, rdi
