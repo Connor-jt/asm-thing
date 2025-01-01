@@ -30,7 +30,7 @@ dFirstFreeIndex qword 0 ; index * 24
 ;  10h, 8 : target data (either a unit handle or x,y coords)
 
 ; Actor Handle
-; 11111111 11110000 00000000 00000000 : entity index (if set to an incorrect value such as -1 on the actor, will invalidate all references)
+; 11111111 11110000 00000000 00000000 : entity index (if set to -1 on the actor, it will invalidate all references)
 ; 00000000 00001111 11111111 00000000 : index handle (allowing 4k reuses)
 ; 00000000 00000000 00000000 11111111 : actor handle type (allowing 256 types)
 ; +3       +2       +1       +0

@@ -22,6 +22,7 @@
 	ConsolePrintNumber PROTO
 	ActorPtrFromHandle PROTO
 	ForceDrawActorHealth PROTO
+	GetActorScreenPos PROTO
 ; windows funcs
 	FrameRect PROTO
 ; exports
