@@ -70,6 +70,48 @@ GetActorStats PROC
 	ret
 GetActorStats ENDP
 
+; rcx: actor ptr (pass through)
+; out rax: x pos
+; out rdx: y pos
+GetActorWorldPos PROC
+	; config locals
+		xor rax, rax
+		xor rdx, rdx
+		;xor r8,  r8
+	; get actor tile position (sign extend so our negatives are fine)
+		movsx rax, word ptr [rcx+8]
+		movsx rdx, word ptr [rcx+10]
+	; adjust for pixel position
+		shl rax, 6
+		shl rdx, 6
+	; apply Y local tile offsets
+		mov r8b, byte ptr [rdx+12]
+		and r8b, 31
+		add rdx, r8b
+	; apply X local tile offsets
+		mov r8w, word ptr [rdx+12]
+		shr r8w, 5
+		and r8w, 31
+		add rax, r8w
+	; return
+		ret
+GetActorWorldPos ENDP
+
+; rcx: actor ptr (pass through)
+; out rax: x pos
+; out rdx: y pos
+GetActorScreenPos PROC
+	sub rsp, 8
+	call GetActorWorldPos
+	sub rax, dCameraX
+	sub rdx, dCameraY
+	; return
+		add rsp, 8
+		ret
+GetActorScreenPos ENDP
+
+
+
 ; r8d: y coord
 ; edx: x coord
 ; ecx: unit type
