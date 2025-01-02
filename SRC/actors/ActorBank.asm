@@ -27,7 +27,7 @@ dFirstFreeIndex qword 0 ; index * 24
 ;	Ah, 2 : tile_y
 ;	Ch, 2 : position_state
 ;	Eh, 2 : ???
-;  10h, 8 : target data (either a unit handle or x,y coords)
+;  10h, 8 : ??? target data (either a unit handle or x,y coords)
 
 ; Actor Handle
 ; 11111111 11110000 00000000 00000000 : entity index (if set to -1 on the actor, it will invalidate the actor)
@@ -39,7 +39,7 @@ dFirstFreeIndex qword 0 ; index * 24
 ; 11000000 : animation state (00: none, 01: stepping, 10: actioning, 11: dying)
 ; 00111000 : direction/death animation step
 ; 00000110 : objective state (00: none, 01: moveto, 10: attack, 11: ???)
-; 00000001 : team
+; 00000001 : team (0: player, 1: enemy)
 
 ; Actor Position State
 ; 11000000 00000000 : queued_steps (00: none, 01: step_1 is valid, 10: step_2 is valid, 11: ???)
@@ -115,22 +115,21 @@ GetActorScreenPos ENDP
 
 
 
-; r8d: y coord
-; edx: x coord
-; ecx: unit type
+; r8w: y tile
+; dx: x tile
+; cl: unit type
 ActorBankCreate PROC
 	; get new actor address
 		lea r10, dActorList
 		add r10, dLastActorIndex
 		add dLastActorIndex, SIZEOF_Actor
 	; write handle
-		mov eax, ecx
-		shl eax, 21
-		or eax, 0100000h ; sets the 'is_valid' flag
-		mov dword ptr [r10], eax ; handle
-	; write position
-		mov dword ptr [r10+8], edx ; x
-		mov dword ptr [r10+12], r8d ; y
+		and cl, 255
+		or ecx, 0100000h ; sets the 'is_valid' flag
+		mov dword ptr [r10], ecx ; handle
+	; write tile position
+		mov dword ptr [r10+8], dx ; x
+		mov dword ptr [r10+10], r8w ; y
 	; write in defaults from stats
 		call GetActorStats
 		mov rdx, r10
