@@ -45,8 +45,8 @@ dFirstFreeIndex qword 0 ; index * 24
 ; 11000000 00000000 : queued_steps (00: none, 01: step_1 is valid, 10: step_2 is valid, 11: ???)
 ; 00110000 00000000 : queued_step_1
 ; 00001100 00000000 : queued_step_2
-; 00000011 11100000 : tile_offset_x
-; 00000000 00011111 : tile_offset_y
+; 00000011 11100000 : tile_offset_x (unsigned)
+; 00000000 00011111 : tile_offset_y (unsigned)
 ; +1       +0
 
 
@@ -57,7 +57,7 @@ dActorStatsList qword	0000000203401020h, ; basic infantry
 ;	000000000000FF00 : max health
 ;	0000000000FF0000 : range
 ;	00000000FF000000 : damage
-;	000000FF00000000 : movement interval
+;	000000FF00000000 : movement interval (or other movement data??)
 ;	0000FF0000000000 : ??? (this should contain actor flags? can move, can attack, ???)
 ;	00FF000000000000 : ???
 ;	FF00000000000000 : ???
@@ -122,24 +122,32 @@ ActorBankCreate PROC
 	; get new actor address
 		lea r10, dActorList
 		add r10, dLastActorIndex
-		add dLastActorIndex, SIZEOF_Actor
-	; write handle
-		and cl, 255
-		or ecx, 0100000h ; sets the 'is_valid' flag
-		mov dword ptr [r10], ecx ; handle
-	; write tile position
-		mov dword ptr [r10+8], dx ; x
-		mov dword ptr [r10+10], r8w ; y
-	; write in defaults from stats
+		and ecx, 255
+	; write in defaults from stats (do it here because it wants our ecx type)
 		call GetActorStats
-		mov rdx, r10
 		mov byte ptr [rdx+6], ah ; health
 		mov byte ptr [rdx+7], al ; action cooldown
+	; write actor index into our handle
+		mov rax, dLastActorIndex
+		mov rdx, SIZEOF_Actor
+		div rdx
+		shl rdx, 20 ; shift handle index into the uppest 12 bits
+		or  ecx, rdx
+	; write reuse index into our handle (NOT SUPPORTED YET!!!!)
+	; increment actor index for the next call
+		add dLastActorIndex, SIZEOF_Actor
+	; write handle to new actor object
+		mov dword ptr [r10], ecx
+	; write tile position
+		mov word ptr [r10+8], dx ; x
+		mov word ptr [r10+10], r8w ; y
 	; write blanks
-		;mov word ptr [rdx+4], 0 ; state
-		mov qword ptr [rdx+16], 0 ; target 
+		mov byte ptr [rdx+4], 0 ; state
+		mov byte ptr [rdx+5], 0 ; ??? unused
+		mov qword ptr [r10+16], 0 ; target 
+	; write in default 
 	; [DEBUG] write in default state
-		mov word ptr [rdx+4], 16 ; state
+		;mov word ptr [r10+4], 16 ; state
 	; complete
 		mov rax, r10
 		ret
@@ -229,11 +237,11 @@ ActorBankRender ENDP
 ;		ret
 ;ReleaseActorByIndex ENDP
 
-; rcx: actor handle (index & type handle)
+; ecx: actor handle
 ActorPtrFromHandle PROC
 	; digest actor handle
-		mov rax, rcx
-		shr rax, 32 ; move index into lower 4 bytes
+		mov eax, ecx
+		shr eax, 20 
 	; generate actor ptr
 		xor edx, edx
 		mov esi, SIZEOF_Actor
@@ -245,6 +253,7 @@ ActorPtrFromHandle PROC
 		jne b30
 			mov rax, rsi
 			ret
+	; else return null
 		b30:
 		xor rax, rax
 		ret
