@@ -29,7 +29,7 @@ TryDrawActorHealth PROC
 		mov r15, rcx
 	; get unit details
 		mov ecx, dword ptr [r12]
-		shr ecx, 21
+		and rcx, 255 ; fetch the last 8 bits for our unit type
 		call GetActorStats
 		mov rbx, rax
 	; skip if actor health is max
@@ -54,7 +54,7 @@ ForceDrawActorHealth PROC
 		mov r15, rcx
 	; get unit details
 		mov ecx, dword ptr [r12]
-		shr ecx, 21
+		and rcx, 255
 		call GetActorStats
 		mov rbx, rax
 	; draw

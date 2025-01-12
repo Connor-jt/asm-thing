@@ -17,6 +17,7 @@ dActorList byte 98256 dup(0) ; 24 bytes x 4094 actors ; we dont use the last one
 dLastActorIndex qword 0 ; index * 24
 dFirstFreeIndex qword 0 ; index * 24
 
+
 ; Actor struct
 ;	0h, 4 : handle
 ;	4h, 1 : state
@@ -122,7 +123,7 @@ ActorBankCreate PROC
 	; get new actor address
 		lea r10, dActorList
 		add r10, dLastActorIndex
-		and ecx, 255
+		and rcx, 255
 	; write in defaults from stats (do it here because it wants our ecx type)
 		call GetActorStats
 		mov byte ptr [rdx+6], ah ; health
@@ -144,6 +145,8 @@ ActorBankCreate PROC
 	; write blanks
 		mov byte ptr [rdx+4], 0 ; state
 		mov byte ptr [rdx+5], 0 ; ??? unused
+		mov word ptr [rdx+12], 528 ; position state
+		mov word ptr [rdx+14], 0 ; ??? unused
 		mov qword ptr [r10+16], 0 ; target 
 	; write in default 
 	; [DEBUG] write in default state
@@ -169,10 +172,11 @@ ActorBankTick PROC
 			cmp dword ptr [r12], 0FFF00000h
 			jge block3
 				call ActorTick
-				; if function returned value other than 0, then delete actor
+				; TODO: actually just move this logic inside the actor tick itself???
+				; if function returned value other than 0, then delete by invalidating actors handle
 				cmp rax, 0
 				jz block3
-					and byte ptr [r12+2], 239
+					or dword ptr [r12+2], 0FFF00000h
 			block3:
 		; next iteration
 			add r12, SIZEOF_Actor
