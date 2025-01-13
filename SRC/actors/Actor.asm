@@ -1,4 +1,9 @@
+
+exterm ReleaseActor
+
+
 .code
+
 
 
 ; r12: actor ptr (pass through)
@@ -9,6 +14,10 @@ ActorTick PROC
 		and al, 30h
 		cmp al, 16
 		jne skip_objective
+			; check if we have any predetermined next nodes to go to
+			; if not, then call the pathfinding function so we can generate a new set of directions
+			; if the resulting list is null, then we have arrived at our destination??
+
 			; move unit 
 				mov r10d, dword ptr [r12+16] ; target x
 				mov r11d, dword ptr [r12+20] ; target y
@@ -49,10 +58,10 @@ ActorTick PROC
 					dec r8b
 				b17:
 				shl r8b, 3
-				mov r9b, byte ptr [r12+5]
+				mov r9b, byte ptr [r12+4]
 				and r9b, 199 ; clears bits 0b00111000
 				or r9b, r8b
-				mov byte ptr [r12+5], r9b
+				mov byte ptr [r12+4], r9b
 
 			; delete unit once they reach their destination
 				cmp r10d, 0
@@ -65,13 +74,13 @@ ActorTick PROC
 						jnz skip_objective
 
 						; die if health <= 0 
-						mov rax, 1
+						mov rcx, r12
+						call ReleaseActor
 						ret	
 				b16:
 		skip_objective:
 
 	; return
-		xor rax, rax ; output 0
 		ret
 ActorTick ENDP
 

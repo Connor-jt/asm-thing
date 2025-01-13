@@ -172,11 +172,6 @@ ActorBankTick PROC
 			cmp dword ptr [r12], 0FFF00000h
 			jge block3
 				call ActorTick
-				; TODO: actually just move this logic inside the actor tick itself???
-				; if function returned value other than 0, then delete by invalidating actors handle
-				cmp rax, 0
-				jz block3
-					or dword ptr [r12+2], 0FFF00000h
 			block3:
 		; next iteration
 			add r12, SIZEOF_Actor
@@ -220,26 +215,19 @@ ActorBankRender PROC
 	ret
 ActorBankRender ENDP
 
-;; rcx: actor ptr
-;ReleaseActor PROC
-;	and byte ptr [rcx+2], 239
-;	ret
-;ReleaseActor ENDP
-;
-;; ecx: index
-;ReleaseActorByIndex PROC
-;	; get actor pointer from index
-;		mov eax, ecx
-;		xor edx, edx
-;		mov ecx, SIZEOF_Actor
-;		mul ecx
-;		lea rcx, dActorList
-;		add rcx, eax
-;	; release actor (uncheck valid flag)
-;		and byte ptr [rcx+2], 239
-;	; return
-;		ret
-;ReleaseActorByIndex ENDP
+; rcx: actor ptr
+ReleaseActor PROC
+	or dword ptr [rcx], 0FFF00000h
+	ret
+ReleaseActor ENDP
+
+; ecx: handle
+ReleaseActorByHandle PROC
+	call ActorPtrFromHandle
+	mov rcx, rax
+	call ReleaseActor
+	ret
+ReleaseActorByHandle ENDP
 
 ; ecx: actor handle
 ActorPtrFromHandle PROC
