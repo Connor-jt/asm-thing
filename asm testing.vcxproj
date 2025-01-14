@@ -145,6 +145,7 @@
     <MASM Include="main.asm" />
     <MASM Include="SRC\actors\Actor.asm" />
     <MASM Include="SRC\actors\ActorBank.asm" />
+    <MASM Include="SRC\actors\Pathfinding.asm" />
     <MASM Include="SRC\actors\Sprite.asm" />
     <MASM Include="SRC\actors\SpriteBank.asm" />
     <MASM Include="SRC\Camera.asm" />

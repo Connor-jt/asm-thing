@@ -11,12 +11,12 @@ Grid qword 4096 dup(0) ; 64x64 ; 32kb !!
 
 
 ; Grid data
-; 11111111 00000000 | 0000 00000000 : other bits??
-; 00000000 11111100 | 0000 00000000 : damage taken (63 means fully walkable)
-; 00000000 00000010 | 0000 00000000 : has actor_cluster
-; 00000000 00000001 | 0000 00000000 : has actor
-; 00000000 00000000 | FFFF FFFFFFFF : actor handle | actor cluster handle
-; +7       +6         +4   +0
+; 11111111 00000000 00000000 00000000 \ 00000000 : tile type
+; 00000000 11111111 00000000 00000000 \ 00000000 : health
+; 00000000 00000000 00000000 00001100 \ 00000000 : tile_state (00: uninitialized, 01: clear path, 10: destructible block, 11: indestructible block)
+; 00000000 00000000 00000000 00000011 \ 00000000 : tile_actors (00: no actors, 01: has actor, 10: has actor_cluster)
+; 00000000 00000000 00000000 00000000 \ FFFFFFFF : actor handle | actor cluster handle
+; +7       +6       +5       +4         +0
 
 
 ; 
@@ -88,6 +88,31 @@ GridAccessTile ENDP
 ; dx: Y
 ; cx: X
 GridIsTileClear PROC
+	; get tile data
+		sub rsp, 8
+		call GridAccessTile
+	; if tile is non-walkable then fail
+		mov rcx, rdx
+		and rcx, 00FC000000000000h
+		cmp rcx, 00FC000000000000h
+		jne tile_occupied
+	; get actor on tile bits
+		and rdx, 0003000000000000h
+		cmp rdx, 0
+		jne tile_occupied
+	; else tile is free to use
+		mov rax, 1
+		jmp return
+	tile_occupied:
+		xor rax, rax
+	return:
+		add rsp, 8
+		ret
+GridIsTileClear ENDP
+
+; dx: Y
+; cx: X
+GridTilePathingCost PROC
 	; get tile data
 		sub rsp, 8
 		call GridAccessTile
