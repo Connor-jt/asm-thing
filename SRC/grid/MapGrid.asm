@@ -32,6 +32,7 @@ Grid qword 4096 dup(0) ; 64x64 ; 32kb !!
 ; func check tile ; returns actor handle, with modified not_actor bit (highest most bit)
 
 
+; [output] rax: tile data
 ; dx: Y
 ; cx: X
 GridAccessTile PROC
@@ -79,7 +80,8 @@ GridAccessTile PROC
 		cmp rdx, 0
 		je return_fail
 	; get content of quad index (tile)
-		mov rdx, qword ptr [rdx+r9*8]
+		mov rax, qword ptr [rdx+r9*8]
+		ret
 	return_fail:
 		xor rax, rax
 		ret 
@@ -87,28 +89,28 @@ GridAccessTile ENDP
 
 ; dx: Y
 ; cx: X
-GridIsTileClear PROC
-	; get tile data
-		sub rsp, 8
-		call GridAccessTile
-	; if tile is non-walkable then fail
-		mov rcx, rdx
-		and rcx, 00FC000000000000h
-		cmp rcx, 00FC000000000000h
-		jne tile_occupied
-	; get actor on tile bits
-		and rdx, 0003000000000000h
-		cmp rdx, 0
-		jne tile_occupied
-	; else tile is free to use
-		mov rax, 1
-		jmp return
-	tile_occupied:
-		xor rax, rax
-	return:
-		add rsp, 8
-		ret
-GridIsTileClear ENDP
+;GridIsTileClear PROC
+;	; get tile data
+;		sub rsp, 8
+;		call GridAccessTile
+;	; if tile is non-walkable then fail
+;		mov rcx, rdx
+;		and rcx, 00FC000000000000h
+;		cmp rcx, 00FC000000000000h
+;		jne tile_occupied
+;	; get actor on tile bits
+;		and rdx, 0003000000000000h
+;		cmp rdx, 0
+;		jne tile_occupied
+;	; else tile is free to use
+;		mov rax, 1
+;		jmp return
+;	tile_occupied:
+;		xor rax, rax
+;	return:
+;		add rsp, 8
+;		ret
+;GridIsTileClear ENDP
 
 ; dx: Y
 ; cx: X
