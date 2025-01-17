@@ -33,42 +33,42 @@ Grid qword 4096 dup(0) ; 64x64 ; 32kb !!
 
 
 ; [output] rax: tile data
-; dx: Y
-; cx: X
+; edx: Y
+; ecx: X
 GridAccessTile PROC
-	; r8b: quad array index
-	; r9b: section array index
-	; cx: grid array index
-
+	; r8d: quad array index
+	; r9d: section array index
+	; ecx: grid array index
 	; transform coords, so coord 0,0 becomes the center most tile
 	; todo: make 0,0 not the perfect center so we dont have to constantly realloc blocks
-		add cx, 8000h
-		add dx, 8000h
+	; TODO: optimize this a bit more, since its going to be a very heavily used function!!!!
+		add ecx, 8000h
+		add edx, 8000h
 	; get quadrant layer coords (indexes the tile)
-		mov r8b, cx
-		mov ax,  dx
-		and r8,  31 ; clear the whole register
-		and ax,  31
+		mov r8d, ecx
+		mov eax, edx
+		and r8d, 31
+		and eax, 31
 		; combine Y into X
-		shl  ax, 5
-		or  r8b, ax 
+		shl eax, 5
+		or  r8d, eax 
 	; get section layer coords (indexes the quadrant)
-		shr cx, 5
-		shr dx, 5
-		mov r9b, cx
-		mov ax,  dx
-		and r9,  31 ; clear the whole register
-		and ax,  31
+		shr ecx, 5
+		shr edx, 5
+		mov r9d, ecx
+		mov eax, edx
+		and r9d, 31 
+		and eax, 31
 		; combine Y into X
-		shl ax,  5
-		or  r9b, ax 
+		shl eax,  5
+		or  r9d, eax 
 	; get grid layer coords
-		shr cx, 5
-		shr dx, 5
-		and rcx, 63 ; clear the rest of the bits in the register
+		shr ecx, 5
+		shr edx, 5
+		;and ecx, 63 ; likely not necessary
 		; combine Y into X
-		shl dx, 6
-		or  cx, dx 
+		shl edx, 6
+		or  ecx, edx 
 
 	; check grid index (section) is valid
 		lea rax, Grid
@@ -87,8 +87,8 @@ GridAccessTile PROC
 		ret 
 GridAccessTile ENDP
 
-; dx: Y
-; cx: X
+; edx: Y
+; ecx: X
 ;GridIsTileClear PROC
 ;	; get tile data
 ;		sub rsp, 8
@@ -112,28 +112,45 @@ GridAccessTile ENDP
 ;		ret
 ;GridIsTileClear ENDP
 
-; dx: Y
-; cx: X
+; edx: Y
+; ecx: X
 GridTilePathingCost PROC
 	; get tile data
-		sub rsp, 8
 		call GridAccessTile
-	; if tile is non-walkable then fail
-		mov rcx, rdx
-		and rcx, 00FC000000000000h
-		cmp rcx, 00FC000000000000h
-		jne tile_occupied
-	; get actor on tile bits
-		and rdx, 0003000000000000h
-		cmp rdx, 0
-		jne tile_occupied
-	; else tile is free to use
-		mov rax, 1
-		jmp return
-	tile_occupied:
-		xor rax, rax
-	return:
-		add rsp, 8
+	; if tile is uninitialized, then assume its a default destructible block (add 1 health because we are not sure what block it is?)
+		cmp rax, 0
+		je return_basic_block
+	; check if tile has actors on it
+		test rax, 0300000000h
+		jnz return_impassible 
+	; check tile state (and return if its uninitialized)
+		mov rcx, rax 
+		and rcx, 0C00000000h
+		jz return_basic_block
+	; check if tile is clear
+		cmp rcx, 0400000000h
+		je return_clear_path
+	; check if tile has health
+		cmp rcx, 0800000000h
+		je return_destructible_block
+	; check if tile is an indestructible blocker 
+	; NOTE: this is the default fallback case, so we dont actually need to check
+		;cmp rcx, 0C00000000h
+		;je return_impassible
+	return_impassible:
+		mov eax, 63
+		ret
+	return_destructible_block:
+		shr rax, 48
+		and rax, 8
+		cmp rax, 63
+		jg return_impassible
+		ret
+	return_clear_path:
+		xor eax,eax
+		ret
+	return_basic_block:
+		mov eax, 1
 		ret
 GridIsTileClear ENDP
 	
