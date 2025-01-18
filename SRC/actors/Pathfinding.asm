@@ -19,8 +19,12 @@ current_best_value dword 0
 
 src_y dword 0
 src_x dword 0
-dest_y dword 0
-dest_x dword 0
+
+local_to_world_y dword 0
+local_to_world_x dword 0
+
+local_dest_y dword 0
+local_dest_x dword 0
 
 .code
 
@@ -87,38 +91,68 @@ BeginPathfind PROC
 	mov ecx ; X coord
 	call ProcessTile
 
+	; if we maxed out our node value thing
+	; then we need to run a new algorithm to figure out what tile we reached that was the closest to the destination, and just backtrack from there
 	
 BeginPathfind ENDP
 
 
-; edx: y
-; ecx: x
+; edx: y (local grid index)
+; ecx: x (local grid index)
 ; esi: value
+; r11d: direction (2 bits, 00-01-10-11)
 ProcessTile PROC
+	; convert direction bits into local coords
+		cmp r11d, 0
+		jne b56
+			
+			jmp finish_direction_checks
+		b56:
+
+	finish_direction_checks:
+	; calculate the distance
+		; Y dist
+			mov eax, edx
+			sub eax, local_dest_y
+			jge b53
+				neg eax
+			b53:
+			add esi, eax
+		; X dist
+			mov eax, ecx
+			sub eax, local_dest_x
+			jge b54
+				neg eax
+			b54:
+			add esi, eax
 	; generate local tile index
-		mov eax, r11d
-		shl eax, 4
-		or eax, r10d
+		mov r10d, ecx
+		shl r10d, 4
+		or r10d, edx
 	; if this tile is marked as too expensive, dont bother reprocessing, cause we have probably already fully evaluated this node
 		lea rdi, neighbor_grid
-		movzx edi, byte ptr [rdi + rax]
+		movzx edi, byte ptr [rdi + r10]
 		shr edi, 2
 		cmp edi, 63
-		jl b49
-			ret
-		b49:
+		jge skip_tile_processing
+	; convert our local coords into world tile coords
+		add edx, local_to_world_y
+		add ecx, local_to_world_x
 	; get cost of traversing this tile
 		call GridTilePathingCost
 		add esi, eax
-		inc esi ; add 1 to the cost, to account for the cost of actually moving to the tile
-	; then add on the deviation of this node
-		
-		; which is simply finding the distance between this tile and the dest tile
-		; and add that to our current value
-
-	; now check if route is cheaper to this node OR if prev value was 0
+		inc esi ; inc to account for dist of tile
+	; if we have not previously processed this tile, process it
+		cmp edi, 0
+		je write_tile
+	; else if this route is more expensive, skip
 		cmp esi, edi
-
-	; 
+		jge skip_tile_processing
+	; else this route is cheaper, so write it in
+	write_tile:
+		lea rdi, neighbor_grid
+		movzx edi, byte ptr [rdi + r10]
+	skip_tile_processing:
+		ret
 ProcessTile ENDP
 
