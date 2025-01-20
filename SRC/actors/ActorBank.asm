@@ -28,7 +28,10 @@ dFirstFreeIndex qword 0 ; index * 24
 ;	Ah, 2 : tile_y
 ;	Ch, 2 : position_state
 ;	Eh, 2 : ???
-;  10h, 8 : ??? target data (either a unit handle or x,y coords)
+;  10h, 4 : attack_target (NOTE: overlaps with dest X/Y)
+;  10h, 2 : dest_x
+;  12h, 2 : dest_y
+;  14h, 4 : ???
 
 ; Actor Handle
 ; 11111111 11110000 00000000 00000000 : entity index (if set to -1 on the actor, it will invalidate the actor)

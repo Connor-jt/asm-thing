@@ -8,15 +8,44 @@ exterm ReleaseActor
 
 ; r12: actor ptr (pass through)
 ActorTick PROC
-	
-	; if current objective is move_to
-		mov al, byte ptr [r12+4]
-		and al, 30h
-		cmp al, 16
-		jne skip_objective
-			; check if we have any predetermined next nodes to go to
-			; if not, then call the pathfinding function so we can generate a new set of directions
-			; if the resulting list is null, then we have arrived at our destination??
+	; if action cooldown is active, skip objectives till the cooldown is over
+		cmp byte ptr[r12+7], 0
+		jne b91
+			dec byte ptr[r12+7]
+			jmp skip_objective
+		b91:
+	; check objective type
+		movzx eax, byte ptr [r12+4]
+		shr eax, 1
+		and eax, 3
+		cmp eax, 1
+		jl skip_objective ; 00: means no objective
+		je move_objective ; 01: means moveto
+		cmp eax, 2
+		je skip_objective ; 10: means attack
+		jg skip_objective ; 11: means UNDEFINED objective
+
+		move_objective:
+			; check for predetermined next nodes to go to
+			movzx eax, byte ptr [r12+13]
+			cmp eax, 64
+			; if no predetermined steps, run pathfind
+			jge b92
+				push eax ; save this value for later
+				movzx r9d, word ptr [r12 + 18] ; dest Y
+				movzx r8d, word ptr [r12 + 16] ; dest X
+				movzx edx, word ptr [r12 + 10] ; src Y
+				movzx ecx, word ptr [r12 + 8]  ; src X
+				BeginPathfind PROC
+				; if pathfind failed, complete objective
+				cmp eax, 0
+				je complete_objective
+				; otherwise, paste that info into our actor position state
+				and byte ptr [r13+13], 3 ; clear bits
+				or byte ptr [r13+13], al ; write bits
+				
+				pop eax
+			b92:
 
 			; move unit 
 				mov r10d, dword ptr [r12+16] ; target x
@@ -52,6 +81,8 @@ ActorTick PROC
 						dec dword ptr [r12+12] ; src y
 						sub r8b, 3
 				b14:
+
+
 			; apply unit direction
 				cmp r8b, 4
 				jle b17	; index 4 does not actually exist, so we have to decrement each index past that
@@ -64,20 +95,24 @@ ActorTick PROC
 				mov byte ptr [r12+4], r9b
 
 			; delete unit once they reach their destination
-				cmp r10d, 0
-				jne b16
-					cmp r11d, 0
-					jne b16
-						; subtract health
-						dec byte ptr [r12+6] ; health
-						;cmp byte ptr [r12+6], 0
-						jnz skip_objective
+			;	cmp r10d, 0
+			;	jne b16
+			;		cmp r11d, 0
+			;		jne b16
+			;			; subtract health
+			;			dec byte ptr [r12+6] ; health
+			;			;cmp byte ptr [r12+6], 0
+			;			jnz skip_objective
+			;
+			;			; die if health <= 0 
+			;			mov rcx, r12
+			;			call ReleaseActor
+			;			ret	
+			;	b16:
+			jmp skip_objective
 
-						; die if health <= 0 
-						mov rcx, r12
-						call ReleaseActor
-						ret	
-				b16:
+		complete_objective:
+			and byte ptr [r12+4], 249 ; clear objective bits
 		skip_objective:
 
 	; return
