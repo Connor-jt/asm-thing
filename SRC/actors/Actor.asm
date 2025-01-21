@@ -19,11 +19,11 @@ ActorTick PROC
 		shr eax, 1
 		and eax, 3
 		cmp eax, 1
-		jl skip_objective ; 00: means no objective
-		je move_objective ; 01: means moveto
+		jl skip_objective  ; 00: means no objective
+		je move_objective  ; 01: means moveto
 		cmp eax, 2
-		je skip_objective ; 10: means attack
-		jg skip_objective ; 11: means UNDEFINED objective
+		je skip_objective  ; 10: means attack
+		jmp skip_objective ; 11: means UNDEFINED objective
 
 		move_objective:
 			; check for predetermined next nodes to go to
@@ -69,8 +69,34 @@ ActorTick PROC
 						mov ecx ; x
 						call GridAccessTile
 						; if tile contains destructible, attack it
-
 						
+					; check if tile has actors on it
+						test rax, 0300000000h
+						jnz b94_blocked_move 
+					; check tile state (and return if its uninitialized)
+						mov rcx, rax 
+						and rcx, 0C00000000h
+						jz b94_damage_tile
+					; check if tile is clear
+						cmp rcx, 0400000000h
+						je b94_move_tile
+					; check if tile has health
+						cmp rcx, 0800000000h
+						je b94_damage_tile
+					; check if tile is an indestructible blocker 
+						cmp rcx, 0C00000000h
+						je b94_blocked_move
+
+
+
+						b94_damage_tile:
+						; and then reset action cooldown
+
+						b94_blocked_move:
+
+						b94_move_tile:
+
+
 					b94:
 					; dec X
 				jmp b93
@@ -158,5 +184,8 @@ ActorTick PROC
 		ret
 ActorTick ENDP
 
+ActorResetCooldown PROC
+	
+ActorResetCooldown ENDP
 
 END
