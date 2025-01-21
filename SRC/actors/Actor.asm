@@ -27,25 +27,64 @@ ActorTick PROC
 
 		move_objective:
 			; check for predetermined next nodes to go to
-			movzx eax, byte ptr [r12+13]
-			cmp eax, 64
+			movzx ecx, byte ptr [r12+13]
+			cmp ecx, 64
 			; if no predetermined steps, run pathfind
 			jge b92
-				push eax ; save this value for later
+				push ecx ; store for later
 				movzx r9d, word ptr [r12 + 18] ; dest Y
 				movzx r8d, word ptr [r12 + 16] ; dest X
 				movzx edx, word ptr [r12 + 10] ; src Y
 				movzx ecx, word ptr [r12 + 8]  ; src X
-				BeginPathfind PROC
+				call BeginPathfind
 				; if pathfind failed, complete objective
-				cmp eax, 0
-				je complete_objective
+				cmp eax, 64
+				jl complete_objective
 				; otherwise, paste that info into our actor position state
-				and byte ptr [r13+13], 3 ; clear bits
-				or byte ptr [r13+13], al ; write bits
-				
-				pop eax
+				pop ecx
+				and ecx, 3 ; clear bits
+				or ecx, eax ; write bits
+				mov byte ptr [r13+13], cl
 			b92:
+
+			; strip out next step from direction bits
+				shr ecx, 4
+				and ecx, 3
+			; handle direction
+				cmp ecx, 2
+				je bottom
+				jg right
+				cmp ecx, 1
+				je top
+				;left
+					; get bits
+					movzx eax, word ptr [r13+12]
+					shr eax, 5
+					and eax, 31
+					; check if immient tile jump
+					cmp eax, 0
+					jg b94:
+						; check grid map to make sure the tile is clear
+						mov edx ; y
+						mov ecx ; x
+						call GridAccessTile
+						; if tile contains destructible, attack it
+
+						
+					b94:
+					; dec X
+				jmp b93
+				right:
+					; inc X
+				jmp b93
+				top:
+					; dec Y
+				jmp b93
+				bottom:
+					; inc Y
+				b93:
+
+
 
 			; move unit 
 				mov r10d, dword ptr [r12+16] ; target x
@@ -84,11 +123,11 @@ ActorTick PROC
 
 
 			; apply unit direction
-				cmp r8b, 4
-				jle b17	; index 4 does not actually exist, so we have to decrement each index past that
-					dec r8b
-				b17:
-				shl r8b, 3
+				;cmp r8b, 4
+				;jle b17	; index 4 does not actually exist, so we have to decrement each index past that
+				;	dec r8b
+				;b17:
+				;shl r8b, 3
 				mov r9b, byte ptr [r12+4]
 				and r9b, 199 ; clears bits 0b00111000
 				or r9b, r8b

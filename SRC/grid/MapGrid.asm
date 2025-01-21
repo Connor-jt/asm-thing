@@ -31,7 +31,9 @@ Grid qword 4096 dup(0) ; 64x64 ; 32kb !!
 
 ; func check tile ; returns actor handle, with modified not_actor bit (highest most bit)
 
-
+GridAccessTilePtr PROC
+	
+GridAccessTilePtr ENDP
 ; [output] rax: tile data
 ; edx: Y
 ; ecx: X
