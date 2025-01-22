@@ -171,6 +171,21 @@ GridAccessTile PROC
 		ret 
 GridAccessTile ENDP
 
+
+; r8d: damage
+; edx: Y
+; ecx: X
+GridDamageTile PROC
+	call GridAccessOrCreateTilePtr
+	cmp rax, 0
+	je return
+
+
+
+	return:
+		ret
+GridDamageTile ENDP
+
 ; edx: Y
 ; ecx: X
 ;GridIsTileClear PROC
