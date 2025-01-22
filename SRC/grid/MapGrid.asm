@@ -1,8 +1,11 @@
 
+malloc PROTO
+
 
 .data
 
 Grid qword 4096 dup(0) ; 64x64 ; 32kb !!
+; and then the sections & quads are dynamically allocated memory (8000 bytes each)
 
 ; LAYERS:
 ;	grid		: topmost layer  64x64
@@ -22,7 +25,19 @@ Grid qword 4096 dup(0) ; 64x64 ; 32kb !!
 ; 
 .code
 
-
+; [OUTPUT] rax: mempointer
+; rcx: count
+LazyAlignMalloc PROC
+	; NOTE: since we stopped correctly managing RSP alignment at some point, we have to dynamically align RSP to 16 bytes here
+	push r12
+	mov r12, rsp
+	and r12, 8
+	sub rsp, r12
+	call malloc
+	add rsp, r12
+	pop r12
+	ret
+LazyAlignMalloc ENDP
 
 
 ; func try claim tile
@@ -31,16 +46,12 @@ Grid qword 4096 dup(0) ; 64x64 ; 32kb !!
 
 ; func check tile ; returns actor handle, with modified not_actor bit (highest most bit)
 
-GridAccessTilePtr PROC
-	
-GridAccessTilePtr ENDP
-; [output] rax: tile data
+; [OUTPUT] r8d: quad array index
+; [OUTPUT] r9d: section array index
+; [OUTPUT] ecx: grid array index
 ; edx: Y
 ; ecx: X
-GridAccessTile PROC
-	; r8d: quad array index
-	; r9d: section array index
-	; ecx: grid array index
+GridCoordsToIndex PROC
 	; transform coords, so coord 0,0 becomes the center most tile
 	; todo: make 0,0 not the perfect center so we dont have to constantly realloc blocks
 	; TODO: optimize this a bit more, since its going to be a very heavily used function!!!!
@@ -70,22 +81,93 @@ GridAccessTile PROC
 		;and ecx, 63 ; likely not necessary
 		; combine Y into X
 		shl edx, 6
-		or  ecx, edx 
+		or  ecx, edx
+	ret
+GridCoordsToIndex ENDP
 
+; [output] rax: tile data
+; edx: Y
+; ecx: X
+GridAccessTilePtr PROC
+	call GridCoordsToIndex
 	; check grid index (section) is valid
 		lea rax, Grid
 		mov rdx, qword ptr [rax+rcx*8]
 		cmp rdx, 0
 		je return_fail
 	; check section index (quad) is valid
-		mov rdx, qword ptr [rdx+r8*8]
+		mov rdx, qword ptr [rdx+r9*8]
 		cmp rdx, 0
 		je return_fail
 	; get content of quad index (tile)
-		mov rax, qword ptr [rdx+r9*8]
+		lea rax, qword ptr [rdx+r8*8]
 		ret
 	return_fail:
 		xor rax, rax
+		ret 
+GridAccessTilePtr ENDP
+
+; [output] rax: tile data
+; edx: Y
+; ecx: X
+GridAccessOrCreateTilePtr PROC
+	call GridCoordsToIndex
+	push r12
+	push r13
+	push r14
+	push r15
+	mov r12d, r8d ; quad index
+	mov r13d, r9d ; section index
+	mov r14d, ecx ; grid index
+
+	; check grid index (section) is valid, create a new section if not
+		lea r15, Grid
+		mov rax, qword ptr [r15+r14*8]
+		cmp rax, 0
+		jne c00
+			mov ecx, 8192 ; byte size of a section
+			call LazyAlignMalloc
+			mov qword ptr [r15+r14*8], rax
+			cmp rax, 0
+			je return_fail
+		c00:
+	; check section index (quad) is valid, create a new quad if not
+		mov r15, rax
+		mov rax, qword ptr [r15+r13*8]
+		cmp rax, 0
+		jne c00
+			mov ecx, 8192 ; byte size of a quadrant
+			call LazyAlignMalloc
+			mov qword ptr [r15+r13*8], rax
+			cmp rax, 0
+			je return_fail
+		c00:
+	; get content of quad index (tile)
+		pop r15
+		pop r14
+		pop r13
+		pop r12
+		lea rax, qword ptr [rdx+r12*8]
+		ret
+	return_fail:
+		pop r15
+		pop r14
+		pop r13
+		pop r12
+		xor rax, rax
+		ret 
+GridAccessOrCreateTilePtr ENDP
+
+; [output] rax: tile data
+; edx: Y
+; ecx: X
+GridAccessTile PROC
+	call GridAccessTilePtr
+	cmp rax, 0 
+	; if ptr is not null, then return the tile content
+	je return
+		mov rax, qword ptr [rax]
+	return:
 		ret 
 GridAccessTile ENDP
 
