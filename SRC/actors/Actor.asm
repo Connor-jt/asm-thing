@@ -64,7 +64,7 @@ ActorTick PROC
 					dec r13d
 					; set left facing animation
 						and byte ptr [r12+4], 199
-						or  byte ptr [r12+4], 3
+						or  byte ptr [r12+4], 24
 					; get X offset
 						movzx eax, word ptr [r12+12]
 						shr eax, 5
@@ -95,7 +95,6 @@ ActorTick PROC
 					; otherwise indestructible blocker 
 						jmp b93
 					left_damage_tile:
-						; and then reset action cooldown
 						mov r8d, 1 ; damage  ; TODO: hook up unit damage value here??
 						mov edx, r14d ; y
 						mov ecx, r13d ; x
@@ -103,26 +102,183 @@ ActorTick PROC
 						call ActorResetCooldown
 						jmp b93
 					left_move_tile:
-						;and word ptr [r12+12], 0FC1Fh ; clear all X offset bits, so X offset is now 0
 						; set all X offset bits, so X offset is now 31
 							or word ptr [r12+12], 03E0h 
 						; write new pos
-							mov r8d, dword ptr [r12]
-							mov edx, r14d
-							mov ecx, r13d
+							mov r8d, dword ptr [r12] ; handle
+							mov edx, r14d ; y
+							mov ecx, r13d ; x
 							call GridWriteActorAt
 						; clear old pos
 							inc r13d ; restore og position value
-							mov edx, r14d
-							mov ecx, r13d
+							mov edx, r14d ; y
+							mov ecx, r13d ; x
 							call GridClearActorAt
 						jmp b93
 				right:
-					; inc X
+					inc r13d
+					; set right facing animation
+						and byte ptr [r12+4], 199
+						or  byte ptr [r12+4], 32
+					; get X offset
+						movzx eax, word ptr [r12+12]
+						shr eax, 5
+						and eax, 31
+					; if not immienent tile jump, just add offset
+						cmp eax, 31
+						jle b95:
+							add word ptr [r12+12], 32
+							jmp b93
+						b95:
+					; check grid map to make sure the tile is clear
+						mov edx, r14d ; y
+						mov ecx, r13d ; x
+						call GridAccessTile
+					; check if tile has actors on it
+						test rax, 0300000000h
+						jnz b93 
+					; check tile state (and return if its uninitialized)
+						mov rcx, rax 
+						and rcx, 0C00000000h
+						jz right_damage_tile
+					; check if tile has health
+						cmp rcx, 0800000000h
+						je right_damage_tile
+					; check if tile is clear
+						cmp rcx, 0400000000h
+						je right_move_tile
+					; otherwise indestructible blocker 
+						jmp b93
+					right_damage_tile:
+						mov r8d, 1 ; damage  ; TODO: hook up unit damage value here??
+						mov edx, r14d ; y
+						mov ecx, r13d ; x
+						call GridDamageTile
+						call ActorResetCooldown
+						jmp b93
+					right_move_tile:
+						 ; clear all X offset bits, so X offset is now 0
+							and word ptr [r12+12], 0FC1Fh
+						; write new pos
+							mov r8d, dword ptr [r12] ; handle
+							mov edx, r14d ; y
+							mov ecx, r13d ; x
+							call GridWriteActorAt
+						; clear old pos
+							dec r13d ; restore og position value
+							mov edx, r14d ; y
+							mov ecx, r13d ; x
+							call GridClearActorAt
+						jmp b93
 				top:
-					; dec Y
+					dec r14d
+					; set top facing animation
+						and byte ptr [r12+4], 199
+						or  byte ptr [r12+4], 8
+					; get Y offset
+						movzx eax, word ptr [r12+12]
+						and eax, 31
+					; if not immienent tile jump, just sub offset
+						cmp eax, 0
+						jle b96:
+							dec word ptr [r12+12]
+							jmp b93
+						b96:
+					; check grid map to make sure the tile is clear
+						mov edx, r14d ; y
+						mov ecx, r13d ; x
+						call GridAccessTile
+					; check if tile has actors on it
+						test rax, 0300000000h
+						jnz b93 
+					; check tile state (and return if its uninitialized)
+						mov rcx, rax 
+						and rcx, 0C00000000h
+						jz left_damage_tile
+					; check if tile has health
+						cmp rcx, 0800000000h
+						je left_damage_tile
+					; check if tile is clear
+						cmp rcx, 0400000000h
+						je left_move_tile
+					; otherwise indestructible blocker 
+						jmp b93
+					left_damage_tile:
+						mov r8d, 1 ; damage  ; TODO: hook up unit damage value here??
+						mov edx, r14d ; y
+						mov ecx, r13d ; x
+						call GridDamageTile
+						call ActorResetCooldown
+						jmp b93
+					left_move_tile:
+						; set all Y offset bits, so Y offset is now 31
+							or word ptr [r12+12], 31 
+						; write new pos
+							mov r8d, dword ptr [r12] ; handle
+							mov edx, r14d ; y
+							mov ecx, r13d ; x
+							call GridWriteActorAt
+						; clear old pos
+							inc r14d ; restore og position value
+							mov edx, r14d ; y
+							mov ecx, r13d ; x
+							call GridClearActorAt
+						jmp b93
 				bottom:
 					; inc Y
+					inc r14d
+					; set bottom facing animation
+						and byte ptr [r12+4], 199
+						or  byte ptr [r12+4], 48
+					; get Y offset
+						movzx eax, word ptr [r12+12]
+						and eax, 31
+					; if not immienent tile jump, just add offset
+						cmp eax, 31
+						jle b97:
+							inc word ptr [r12+12]
+							jmp b93
+						b97:
+					; check grid map to make sure the tile is clear
+						mov edx, r14d ; y
+						mov ecx, r13d ; x
+						call GridAccessTile
+					; check if tile has actors on it
+						test rax, 0300000000h
+						jnz b93 
+					; check tile state (and return if its uninitialized)
+						mov rcx, rax 
+						and rcx, 0C00000000h
+						jz right_damage_tile
+					; check if tile has health
+						cmp rcx, 0800000000h
+						je right_damage_tile
+					; check if tile is clear
+						cmp rcx, 0400000000h
+						je right_move_tile
+					; otherwise indestructible blocker 
+						jmp b93
+					right_damage_tile:
+						mov r8d, 1 ; damage  ; TODO: hook up unit damage value here??
+						mov edx, r14d ; y
+						mov ecx, r13d ; x
+						call GridDamageTile
+						call ActorResetCooldown
+						jmp b93
+					right_move_tile:
+						 ; clear all Y offset bits, so Y offset is now 0
+							and word ptr [r12+12], 0FFE0h
+						; write new pos
+							mov r8d, dword ptr [r12] ; handle
+							mov edx, r14d ; y
+							mov ecx, r13d ; x
+							call GridWriteActorAt
+						; clear old pos
+							dec r13d ; restore og position value
+							mov edx, r14d ; y
+							mov ecx, r13d ; x
+							call GridClearActorAt
+						;jmp b93
 				b93:
 				pop r14
 				pop r13
@@ -202,7 +358,8 @@ ActorTick ENDP
 
 ; r12: actor ptr (pass through)
 ActorResetCooldown PROC
-	
+	; get stats
+	; write cooldown stat to actor
 ActorResetCooldown ENDP
 
 ; r8d: damage amount

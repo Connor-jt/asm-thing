@@ -175,7 +175,8 @@ GridAccessTile ENDP
 ; edx: Y
 ; ecx: X
 GridClearActorAt PROC
-	
+	; get grid pointer at
+	; write 0 into actor bits
 GridClearActorAt ENDP
 
 ; r8d: actor handle
