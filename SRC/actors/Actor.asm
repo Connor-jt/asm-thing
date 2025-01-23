@@ -188,4 +188,25 @@ ActorResetCooldown PROC
 	
 ActorResetCooldown ENDP
 
+; r8d: damage amount
+; ecx: actor handle
+ActorTakeDamage PROC
+	; fetch actor pointer
+		call ActorPtrFromHandle
+		cmp rax, 0
+		je return
+	; get health
+		movzx edx, byte ptr [rax + 6]
+	; dewal damage, call unit death if no health left
+		sub edx, r8d
+		jle kill_actor
+		mov byte ptr [rax + 6], dl 
+		jmp return
+	kill_actor:
+		mov rcx, rax
+		call ReleaseActor
+	return:
+		ret
+ActorTakeDamage ENDP
+
 END

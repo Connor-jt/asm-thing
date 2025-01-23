@@ -135,13 +135,13 @@ GridAccessOrCreateTilePtr PROC
 		mov r15, rax
 		mov rax, qword ptr [r15+r13*8]
 		cmp rax, 0
-		jne c00
+		jne c01
 			mov ecx, 8192 ; byte size of a quadrant
 			call LazyAlignMalloc
 			mov qword ptr [r15+r13*8], rax
 			cmp rax, 0
 			je return_fail
-		c00:
+		c01:
 	; get content of quad index (tile)
 		pop r15
 		pop r14
@@ -176,13 +176,52 @@ GridAccessTile ENDP
 ; edx: Y
 ; ecx: X
 GridDamageTile PROC
+	push r13
+	mov r13d, r8d
 	call GridAccessOrCreateTilePtr
 	cmp rax, 0
 	je return
-
-
-
+		; get health
+		; subtract damage from health
+		; if less than eq to 0 then we change the tile state to clear path
+		; also clamp the health at 0, no negatives
+		push r12
+		mov r12, rax
+		mov rax, qword ptr [r12]
+		; if has actors
+			test rax, 0300000000h
+			jnz damage_actor 
+		; skip if not damageable (unintialized 0b00 or destructible 0b10)
+			test rax, 0400000000h
+			jnz return_pop
+		damage_tile:
+			; get health
+				mov rcx, rax
+				shr rcx, 48
+				and ecx, 8
+			; subtract
+				sub ecx, r13d
+			; if health depleted, change tile type to cleared
+				jle c04
+					and rax, 0FFFFFFF3FFFFFFFFh
+					or  rax, 0400000000h
+					xor ecx, ecx ; clamp health to min 0
+				c04:
+			; set new health value
+				shl rcx, 48
+				and rax, 0FF00FFFFFFFFFFFFh
+				or rax, rcx
+			; write changes
+				mov qword ptr [r12], rax
+			jmp return_pop
+		damage_actor: ; TODO: support for multi actor tiles
+			mov r8d, r13d ; damage amount
+			mov ecx, eax ; eax is the lower half of our tile data which will contain the actor reference
+			call ActorTakeDamage
+	return_pop:
+		pop r12
 	return:
+		pop r13
 		ret
 GridDamageTile ENDP
 
