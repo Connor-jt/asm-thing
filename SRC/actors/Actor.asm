@@ -27,26 +27,25 @@ ActorTick PROC
 
 		move_objective:
 			; check for predetermined next nodes to go to
-			movzx ecx, byte ptr [r12+13]
-			cmp ecx, 64
+				movzx ecx, byte ptr [r12+13]
+				cmp ecx, 64
 			; if no predetermined steps, run pathfind
-			jge b92
-				push ecx ; store for later
-				movzx r9d, word ptr [r12 + 18] ; dest Y
-				movzx r8d, word ptr [r12 + 16] ; dest X
-				movzx edx, word ptr [r12 + 10] ; src Y
-				movzx ecx, word ptr [r12 + 8]  ; src X
-				call BeginPathfind
-				; if pathfind failed, complete objective
-				cmp eax, 64
-				jl complete_objective
-				; otherwise, paste that info into our actor position state
-				pop ecx
-				and ecx, 3 ; clear bits
-				or ecx, eax ; write bits
-				mov byte ptr [r12+13], cl
-			b92:
-
+				jge b92
+					push ecx ; store for later
+					movzx r9d, word ptr [r12 + 18] ; dest Y
+					movzx r8d, word ptr [r12 + 16] ; dest X
+					movzx edx, word ptr [r12 + 10] ; src Y
+					movzx ecx, word ptr [r12 + 8]  ; src X
+					call BeginPathfind
+					; if pathfind failed, complete objective
+					cmp eax, 64
+					jl complete_objective
+					; otherwise, paste that info into our actor position state
+					pop ecx
+					and ecx, 3 ; clear bits
+					or ecx, eax ; write bits
+					mov byte ptr [r12+13], cl
+				b92:
 			; strip out next step from direction bits
 				shr ecx, 4
 				and ecx, 3
@@ -63,6 +62,9 @@ ActorTick PROC
 				je top
 				;left
 					dec r13d
+					; set left facing animation
+						and byte ptr [r12+4], 199
+						or  byte ptr [r12+4], 3
 					; get X offset
 						movzx eax, word ptr [r12+12]
 						shr eax, 5
@@ -168,10 +170,10 @@ ActorTick PROC
 				;	dec r8b
 				;b17:
 				;shl r8b, 3
-				mov r9b, byte ptr [r12+4]
-				and r9b, 199 ; clears bits 0b00111000
-				or r9b, r8b
-				mov byte ptr [r12+4], r9b
+				;mov r9b, byte ptr [r12+4]
+				;and r9b, 199 ; clears bits 0b00111000
+				;or r9b, r8b
+				;mov byte ptr [r12+4], r9b
 
 			; delete unit once they reach their destination
 			;	cmp r10d, 0
