@@ -172,6 +172,21 @@ GridAccessTile PROC
 GridAccessTile ENDP
 
 
+; edx: Y
+; ecx: X
+GridClearActorAt PROC
+	
+GridClearActorAt ENDP
+
+; r8d: actor handle
+; edx: Y
+; ecx: X
+GridWriteActorAt PROC
+	
+GridWriteActorAt ENDP
+
+
+
 ; r8d: damage
 ; edx: Y
 ; ecx: X

@@ -44,12 +44,17 @@ ActorTick PROC
 				pop ecx
 				and ecx, 3 ; clear bits
 				or ecx, eax ; write bits
-				mov byte ptr [r13+13], cl
+				mov byte ptr [r12+13], cl
 			b92:
 
 			; strip out next step from direction bits
 				shr ecx, 4
 				and ecx, 3
+			; config vars
+				push r13 ; x 
+				push r14 ; y
+				movzx r13d, word ptr [r12 + 8]  ; src X
+				movzx r14d, word ptr [r12 + 10] ; src Y
 			; handle direction
 				cmp ecx, 2
 				je bottom
@@ -57,95 +62,104 @@ ActorTick PROC
 				cmp ecx, 1
 				je top
 				;left
-					; get bits
-					movzx eax, word ptr [r13+12]
-					shr eax, 5
-					and eax, 31
-					; check if immient tile jump
-					cmp eax, 0
-					jg b94:
-						; check grid map to make sure the tile is clear
-						mov edx ; y
-						mov ecx ; x
+					dec r13d
+					; get X offset
+						movzx eax, word ptr [r12+12]
+						shr eax, 5
+						and eax, 31
+					; if not immienent tile jump, just sub offset
+						cmp eax, 0
+						jle b94:
+							sub word ptr [r12+12], 32
+							jmp b93
+						b94:
+					; check grid map to make sure the tile is clear
+						mov edx, r14d ; y
+						mov ecx, r13d ; x
 						call GridAccessTile
-						; if tile contains destructible, attack it
-						
 					; check if tile has actors on it
 						test rax, 0300000000h
-						jnz b94_blocked_move 
+						jnz b93 
 					; check tile state (and return if its uninitialized)
 						mov rcx, rax 
 						and rcx, 0C00000000h
-						jz b94_damage_tile
-					; check if tile is clear
-						cmp rcx, 0400000000h
-						je b94_move_tile
+						jz left_damage_tile
 					; check if tile has health
 						cmp rcx, 0800000000h
-						je b94_damage_tile
-					; check if tile is an indestructible blocker 
-						cmp rcx, 0C00000000h
-						je b94_blocked_move
-
-
-
-						b94_damage_tile:
+						je left_damage_tile
+					; check if tile is clear
+						cmp rcx, 0400000000h
+						je left_move_tile
+					; otherwise indestructible blocker 
+						jmp b93
+					left_damage_tile:
 						; and then reset action cooldown
-
-						b94_blocked_move:
-
-						b94_move_tile:
-
-
-					b94:
-					; dec X
-				jmp b93
+						mov r8d, 1 ; damage  ; TODO: hook up unit damage value here??
+						mov edx, r14d ; y
+						mov ecx, r13d ; x
+						call GridDamageTile
+						call ActorResetCooldown
+						jmp b93
+					left_move_tile:
+						;and word ptr [r12+12], 0FC1Fh ; clear all X offset bits, so X offset is now 0
+						; set all X offset bits, so X offset is now 31
+							or word ptr [r12+12], 03E0h 
+						; write new pos
+							mov r8d, dword ptr [r12]
+							mov edx, r14d
+							mov ecx, r13d
+							call GridWriteActorAt
+						; clear old pos
+							inc r13d ; restore og position value
+							mov edx, r14d
+							mov ecx, r13d
+							call GridClearActorAt
+						jmp b93
 				right:
 					; inc X
-				jmp b93
 				top:
 					; dec Y
-				jmp b93
 				bottom:
 					; inc Y
 				b93:
+				pop r14
+				pop r13
 
 
-
-			; move unit 
-				mov r10d, dword ptr [r12+16] ; target x
-				mov r11d, dword ptr [r12+20] ; target y
-				sub r10d, dword ptr [r12+ 8] ; src x
-				sub r11d, dword ptr [r12+12] ; src y
-				mov r8b, 4 ; unit direction
-			; calc X movement
-				cmp r10d, 0
-				; if offs_X != 0
-				jz b12
-					; if offs_X > 0
-					jl b13
-						inc dword ptr [r12+ 8] ; src x
-						inc r8b
-					jmp b12
-					; if offs_X < 0
-					b13:
-						dec dword ptr [r12+ 8] ; src x
-						dec r8b
-				b12:
-			; calc Y movement
-				cmp r11d, 0
-				; if offs_Y != 0
-				jz b14
-					; if offs_Y > 0
-					jl b15
-						inc dword ptr [r12+12] ; src y
-						add r8b, 3
-					jmp b14
-					; if offs_Y < 0
-					b15:
-						dec dword ptr [r12+12] ; src y
-						sub r8b, 3
-				b14:
+			;; move unit 
+			;	mov r10d, dword ptr [r12+16] ; target x
+			;	mov r11d, dword ptr [r12+20] ; target y
+			;	sub r10d, dword ptr [r12+ 8] ; src x
+			;	sub r11d, dword ptr [r12+12] ; src y
+			;	mov r8b, 4 ; unit direction
+			;; calc X movement
+			;	cmp r10d, 0
+			;	; if offs_X != 0
+			;	jz b12
+			;		; if offs_X > 0
+			;		jl b13
+			;			inc dword ptr [r12+ 8] ; src x
+			;			inc r8b
+			;		jmp b12
+			;		; if offs_X < 0
+			;		b13:
+			;			dec dword ptr [r12+ 8] ; src x
+			;			dec r8b
+			;	b12:
+			;; calc Y movement
+			;	cmp r11d, 0
+			;	; if offs_Y != 0
+			;	jz b14
+			;		; if offs_Y > 0
+			;		jl b15
+			;			inc dword ptr [r12+12] ; src y
+			;			add r8b, 3
+			;		jmp b14
+			;		; if offs_Y < 0
+			;		b15:
+			;			dec dword ptr [r12+12] ; src y
+			;			sub r8b, 3
+			;	b14:
 
 
 			; apply unit direction
@@ -184,6 +198,7 @@ ActorTick PROC
 		ret
 ActorTick ENDP
 
+; r12: actor ptr (pass through)
 ActorResetCooldown PROC
 	
 ActorResetCooldown ENDP
