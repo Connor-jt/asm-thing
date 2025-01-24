@@ -5,6 +5,47 @@ exterm ReleaseActor
 .code
 
 
+ActorStepHelper PROC
+	; get grid tile of target position
+		mov edx, r14d ; y
+		mov ecx, r13d ; x
+		call GridAccessTile
+	; if tile has actors on it
+		test rax, 0300000000h
+		jnz return 
+	; if tile uninitialized
+		mov rcx, rax 
+		and rcx, 0C00000000h
+		jz damage_tile
+	; if tile has health
+		cmp rcx, 0800000000h
+		je damage_tile
+	; if tile is clear
+		cmp rcx, 0400000000h
+		je move_tile
+	; otherwise indestructible blocker 
+		jmp return
+	damage_tile:
+		mov r8d, 1 ; damage  ; TODO: hook up unit damage value here??
+		mov edx, r14d ; y
+		mov ecx, r13d ; x
+		call GridDamageTile
+		call ActorResetCooldown
+		jmp return
+	move_tile:
+		; write new pos
+			mov r8d, dword ptr [r12] ; handle
+			mov edx, r14d ; y
+			mov ecx, r13d ; x
+			call GridWriteActorAt
+		; return success
+			mov rax, 1
+			ret
+	return:
+		xor rax, rax
+		ret
+ActorStepHelper ENDP
+
 
 ; r12: actor ptr (pass through)
 ActorTick PROC
@@ -75,45 +116,17 @@ ActorTick PROC
 							sub word ptr [r12+12], 32
 							jmp b93
 						b94:
-					; check grid map to make sure the tile is clear
+					; run mov to new tile logic
+						call ActorStepHelper
+						cmp eax, 0
+						jne b93 ; skip the rest if we did not actually move
+					; clear old pos
+						inc r13d ; restore og position value
 						mov edx, r14d ; y
 						mov ecx, r13d ; x
-						call GridAccessTile
-					; check if tile has actors on it
-						test rax, 0300000000h
-						jnz b93 
-					; check tile state (and return if its uninitialized)
-						mov rcx, rax 
-						and rcx, 0C00000000h
-						jz left_damage_tile
-					; check if tile has health
-						cmp rcx, 0800000000h
-						je left_damage_tile
-					; check if tile is clear
-						cmp rcx, 0400000000h
-						je left_move_tile
-					; otherwise indestructible blocker 
-						jmp b93
-					left_damage_tile:
-						mov r8d, 1 ; damage  ; TODO: hook up unit damage value here??
-						mov edx, r14d ; y
-						mov ecx, r13d ; x
-						call GridDamageTile
-						call ActorResetCooldown
-						jmp b93
-					left_move_tile:
-						; set all X offset bits, so X offset is now 31
-							or word ptr [r12+12], 03E0h 
-						; write new pos
-							mov r8d, dword ptr [r12] ; handle
-							mov edx, r14d ; y
-							mov ecx, r13d ; x
-							call GridWriteActorAt
-						; clear old pos
-							inc r13d ; restore og position value
-							mov edx, r14d ; y
-							mov ecx, r13d ; x
-							call GridClearActorAt
+						call GridClearActorAt
+					; set all X offset bits, so X offset is now 31
+						or word ptr [r12+12], 03E0h
 						jmp b93
 				right:
 					inc r13d
@@ -130,45 +143,17 @@ ActorTick PROC
 							add word ptr [r12+12], 32
 							jmp b93
 						b95:
-					; check grid map to make sure the tile is clear
+					; run mov to new tile logic
+						call ActorStepHelper
+						cmp eax, 0
+						jne b93 ; skip the rest if we did not actually move
+					; clear old pos
+						dec r13d ; restore og position value
 						mov edx, r14d ; y
 						mov ecx, r13d ; x
-						call GridAccessTile
-					; check if tile has actors on it
-						test rax, 0300000000h
-						jnz b93 
-					; check tile state (and return if its uninitialized)
-						mov rcx, rax 
-						and rcx, 0C00000000h
-						jz right_damage_tile
-					; check if tile has health
-						cmp rcx, 0800000000h
-						je right_damage_tile
-					; check if tile is clear
-						cmp rcx, 0400000000h
-						je right_move_tile
-					; otherwise indestructible blocker 
-						jmp b93
-					right_damage_tile:
-						mov r8d, 1 ; damage  ; TODO: hook up unit damage value here??
-						mov edx, r14d ; y
-						mov ecx, r13d ; x
-						call GridDamageTile
-						call ActorResetCooldown
-						jmp b93
-					right_move_tile:
-						 ; clear all X offset bits, so X offset is now 0
-							and word ptr [r12+12], 0FC1Fh
-						; write new pos
-							mov r8d, dword ptr [r12] ; handle
-							mov edx, r14d ; y
-							mov ecx, r13d ; x
-							call GridWriteActorAt
-						; clear old pos
-							dec r13d ; restore og position value
-							mov edx, r14d ; y
-							mov ecx, r13d ; x
-							call GridClearActorAt
+						call GridClearActorAt
+					; clear all X offset bits, so X offset is now 0
+						and word ptr [r12+12], 0FC1Fh
 						jmp b93
 				top:
 					dec r14d
@@ -184,45 +169,17 @@ ActorTick PROC
 							dec word ptr [r12+12]
 							jmp b93
 						b96:
-					; check grid map to make sure the tile is clear
+					; run mov to new tile logic
+						call ActorStepHelper
+						cmp eax, 0
+						jne b93 ; skip the rest if we did not actually move
+					; clear old pos
+						inc r14d ; restore og position value
 						mov edx, r14d ; y
 						mov ecx, r13d ; x
-						call GridAccessTile
-					; check if tile has actors on it
-						test rax, 0300000000h
-						jnz b93 
-					; check tile state (and return if its uninitialized)
-						mov rcx, rax 
-						and rcx, 0C00000000h
-						jz left_damage_tile
-					; check if tile has health
-						cmp rcx, 0800000000h
-						je left_damage_tile
-					; check if tile is clear
-						cmp rcx, 0400000000h
-						je left_move_tile
-					; otherwise indestructible blocker 
-						jmp b93
-					left_damage_tile:
-						mov r8d, 1 ; damage  ; TODO: hook up unit damage value here??
-						mov edx, r14d ; y
-						mov ecx, r13d ; x
-						call GridDamageTile
-						call ActorResetCooldown
-						jmp b93
-					left_move_tile:
-						; set all Y offset bits, so Y offset is now 31
-							or word ptr [r12+12], 31 
-						; write new pos
-							mov r8d, dword ptr [r12] ; handle
-							mov edx, r14d ; y
-							mov ecx, r13d ; x
-							call GridWriteActorAt
-						; clear old pos
-							inc r14d ; restore og position value
-							mov edx, r14d ; y
-							mov ecx, r13d ; x
-							call GridClearActorAt
+						call GridClearActorAt
+					; set all Y offset bits, so Y offset is now 31
+						or word ptr [r12+12], 31 
 						jmp b93
 				bottom:
 					; inc Y
@@ -239,46 +196,17 @@ ActorTick PROC
 							inc word ptr [r12+12]
 							jmp b93
 						b97:
-					; check grid map to make sure the tile is clear
+					; run mov to new tile logic
+						call ActorStepHelper
+						cmp eax, 0
+						jne b93 ; skip the rest if we did not actually move
+					; clear old pos
+						dec r14d ; restore og position value
 						mov edx, r14d ; y
 						mov ecx, r13d ; x
-						call GridAccessTile
-					; check if tile has actors on it
-						test rax, 0300000000h
-						jnz b93 
-					; check tile state (and return if its uninitialized)
-						mov rcx, rax 
-						and rcx, 0C00000000h
-						jz right_damage_tile
-					; check if tile has health
-						cmp rcx, 0800000000h
-						je right_damage_tile
-					; check if tile is clear
-						cmp rcx, 0400000000h
-						je right_move_tile
-					; otherwise indestructible blocker 
-						jmp b93
-					right_damage_tile:
-						mov r8d, 1 ; damage  ; TODO: hook up unit damage value here??
-						mov edx, r14d ; y
-						mov ecx, r13d ; x
-						call GridDamageTile
-						call ActorResetCooldown
-						jmp b93
-					right_move_tile:
-						 ; clear all Y offset bits, so Y offset is now 0
-							and word ptr [r12+12], 0FFE0h
-						; write new pos
-							mov r8d, dword ptr [r12] ; handle
-							mov edx, r14d ; y
-							mov ecx, r13d ; x
-							call GridWriteActorAt
-						; clear old pos
-							dec r13d ; restore og position value
-							mov edx, r14d ; y
-							mov ecx, r13d ; x
-							call GridClearActorAt
-						;jmp b93
+						call GridClearActorAt
+					; set all Y offset bits, so Y offset is now 31
+						and word ptr [r12+12], 0FFE0h
 				b93:
 				pop r14
 				pop r13
