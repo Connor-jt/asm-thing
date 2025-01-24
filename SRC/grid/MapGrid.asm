@@ -32,6 +32,7 @@ LazyAlignMalloc PROC
 	push r12
 	mov r12, rsp
 	and r12, 8
+	add r12, 20h ; shadow space
 	sub rsp, r12
 	call malloc
 	add rsp, r12
@@ -332,8 +333,59 @@ GridIsTileClear ENDP
 
 
 
-; malloc new section
-; dealloc section (we may not actually use this)
+GridRendcer PROC
+	sub rsp, 8
+	; ecx: X tile position
+	; edx: Y tile position
+	; r8d: X tile count
+	; r9d: Y tile count
+	; r12 actor ptr??
+	push r13
+	push r14
+	push r15
+	push rbx
+	push rbp
 
+	; load camera values
+		mov ecx, dCameraX
+		mov edx, dCameraY
+	; calc amount of tiles onscreen
+		; get sub-tile camera offset
+			mov r8d, ecx
+			mov r9d, edx
+			and r8d, 31
+			and r9d, 31
+		; add in screen size
+			add r8d, dWinX
+			add r9d, dWinY
+		; dec so we dont render an extra tile with count is perfectly even
+			dec r8d
+			dec r9d 
+		; convert pixel size to tile size
+			shr r8d, 5
+			shr r9d, 5
+		; increment count to make up for any partial tile
+			inc r8d
+			inc r9d
+	; adjust camera position if theres any partial tiles at the start
+		and ecx, 0FFFFFFE0h ; clear the lowest 5 bits
+		and edx, 0FFFFFFE0h ; clear the lowest 5 bits
+
+	; loop all tiles
+	loop_row:
+
+		loop_column:
+
+
+
+
+
+
+
+
+
+	add rsp, 8
+	ret
+GridRendcer ENDP
 
 END

@@ -77,6 +77,7 @@ TestRender PROC
 	; draw all actors
 		mov rcx, r12 ; hdc
 		call ActorBankRender
+		call GridRender
 	; release draw actor resources
 		call ReleaseSpriteHDCs
 	; draw actor selection stuff

@@ -157,7 +157,7 @@ ActorBankCreate PROC
 		mov word ptr [r10+8], dx ; x
 		mov word ptr [r10+10], r8w ; y
 	; write blanks
-		mov byte ptr [rdx+4], 6 ; state (sets the unit into move mode?)
+		mov byte ptr [rdx+4], 0 ; state
 		mov byte ptr [rdx+5], 0 ; ??? unused
 		mov word ptr [rdx+12], 528 ; position state
 		mov word ptr [rdx+14], 0 ; ??? unused
