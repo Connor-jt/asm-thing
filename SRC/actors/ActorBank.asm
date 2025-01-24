@@ -77,6 +77,17 @@ GetActorStats PROC
 	ret
 GetActorStats ENDP
 
+; r12: unit ptr (pass through)
+GetActorStatsFromPtr PROC
+	mov cl, byte ptr [r12]
+	call GetActorStats
+	ret
+GetActorStatsFromPtr ENDP
+
+
+
+
+
 ; rcx: actor ptr (pass through)
 ; out rax: x pos
 ; out rdx: y pos

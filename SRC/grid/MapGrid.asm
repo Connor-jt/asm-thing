@@ -176,14 +176,35 @@ GridAccessTile ENDP
 ; ecx: X
 GridClearActorAt PROC
 	; get grid pointer at
-	; write 0 into actor bits
+		call GridAccessTilePtr
+		cmp rax, 0
+		je return
+	; clear actor bits
+		and qword ptr [rax], 0FFFFFFFC00000000h
+	return:
+		ret
 GridClearActorAt ENDP
 
 ; r8d: actor handle
 ; edx: Y
 ; ecx: X
 GridWriteActorAt PROC
-	
+	; get the tile pointer, or create if not yet created
+		push r8
+		call GridAccessOrCreateTilePtr
+		pop r8
+		cmp rax, 0
+		je return
+	; pack data to write to tile
+		mov ecx, r8d ; clear higher bits
+		or ecx, 100000000h
+	; write actor to tile
+		mov rdx, qword ptr [rax]
+		and rdx, 0FFFFFFFC00000000h ; clear actor bits
+		or rdx, rcx ; write new actor bits
+		mov qword ptr [rax], rdx
+	return:
+		ret
 GridWriteActorAt ENDP
 
 

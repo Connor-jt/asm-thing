@@ -12,7 +12,7 @@ ActorStepHelper PROC
 		call GridAccessTile
 	; if tile has actors on it
 		test rax, 0300000000h
-		jnz return 
+		jnz return ; TODO: auto attack if an enemy is on the tile
 	; if tile uninitialized
 		mov rcx, rax 
 		and rcx, 0C00000000h
@@ -127,6 +127,8 @@ ActorTick PROC
 						call GridClearActorAt
 					; set all X offset bits, so X offset is now 31
 						or word ptr [r12+12], 03E0h
+					; write tile change
+						dec word ptr [r12 + 8]  ; src X
 						jmp b93
 				right:
 					inc r13d
@@ -154,6 +156,8 @@ ActorTick PROC
 						call GridClearActorAt
 					; clear all X offset bits, so X offset is now 0
 						and word ptr [r12+12], 0FC1Fh
+					; write tile change
+						inc word ptr [r12 + 8]  ; src X
 						jmp b93
 				top:
 					dec r14d
@@ -180,6 +184,8 @@ ActorTick PROC
 						call GridClearActorAt
 					; set all Y offset bits, so Y offset is now 31
 						or word ptr [r12+12], 31 
+					; write tile change
+						dec word ptr [r12 + 10] ; src Y
 						jmp b93
 				bottom:
 					; inc Y
@@ -207,74 +213,12 @@ ActorTick PROC
 						call GridClearActorAt
 					; set all Y offset bits, so Y offset is now 31
 						and word ptr [r12+12], 0FFE0h
+					; write tile change
+						inc word ptr [r12 + 10] ; src Y
 				b93:
 				pop r14
 				pop r13
-
-
-			;; move unit 
-			;	mov r10d, dword ptr [r12+16] ; target x
-			;	mov r11d, dword ptr [r12+20] ; target y
-			;	sub r10d, dword ptr [r12+ 8] ; src x
-			;	sub r11d, dword ptr [r12+12] ; src y
-			;	mov r8b, 4 ; unit direction
-			;; calc X movement
-			;	cmp r10d, 0
-			;	; if offs_X != 0
-			;	jz b12
-			;		; if offs_X > 0
-			;		jl b13
-			;			inc dword ptr [r12+ 8] ; src x
-			;			inc r8b
-			;		jmp b12
-			;		; if offs_X < 0
-			;		b13:
-			;			dec dword ptr [r12+ 8] ; src x
-			;			dec r8b
-			;	b12:
-			;; calc Y movement
-			;	cmp r11d, 0
-			;	; if offs_Y != 0
-			;	jz b14
-			;		; if offs_Y > 0
-			;		jl b15
-			;			inc dword ptr [r12+12] ; src y
-			;			add r8b, 3
-			;		jmp b14
-			;		; if offs_Y < 0
-			;		b15:
-			;			dec dword ptr [r12+12] ; src y
-			;			sub r8b, 3
-			;	b14:
-
-
-			; apply unit direction
-				;cmp r8b, 4
-				;jle b17	; index 4 does not actually exist, so we have to decrement each index past that
-				;	dec r8b
-				;b17:
-				;shl r8b, 3
-				;mov r9b, byte ptr [r12+4]
-				;and r9b, 199 ; clears bits 0b00111000
-				;or r9b, r8b
-				;mov byte ptr [r12+4], r9b
-
-			; delete unit once they reach their destination
-			;	cmp r10d, 0
-			;	jne b16
-			;		cmp r11d, 0
-			;		jne b16
-			;			; subtract health
-			;			dec byte ptr [r12+6] ; health
-			;			;cmp byte ptr [r12+6], 0
-			;			jnz skip_objective
-			;
-			;			; die if health <= 0 
-			;			mov rcx, r12
-			;			call ReleaseActor
-			;			ret	
-			;	b16:
-			jmp skip_objective
+				jmp skip_objective
 
 		complete_objective:
 			and byte ptr [r12+4], 249 ; clear objective bits
@@ -287,7 +231,10 @@ ActorTick ENDP
 ; r12: actor ptr (pass through)
 ActorResetCooldown PROC
 	; get stats
+	call GetActorStatsFromPtr
 	; write cooldown stat to actor
+	mov byte ptr [r12 + 7], al
+	ret
 ActorResetCooldown ENDP
 
 ; r8d: damage amount
