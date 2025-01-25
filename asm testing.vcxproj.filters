@@ -18,13 +18,10 @@
     <MASM Include="main.asm">
       <Filter>Source Files</Filter>
     </MASM>
-    <MASM Include="SRC\actors\Sprite.asm">
+    <MASM Include="SRC\sprites\ActorSprites.asm">
       <Filter>Source Files</Filter>
     </MASM>
     <MASM Include="SRC\Render.asm">
-      <Filter>Source Files</Filter>
-    </MASM>
-    <MASM Include="SRC\actors\SpriteBank.asm">
       <Filter>Source Files</Filter>
     </MASM>
     <MASM Include="SRC\utils.asm">
@@ -69,6 +66,12 @@
     <MASM Include="SRC\actors\Pathfinding.asm">
       <Filter>Source Files</Filter>
     </MASM>
+    <MASM Include="SRC\sprites\TerrainSprites.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
+    <MASM Include="SRC\sprites\SpriteRenderer.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source.cpp">
@@ -76,10 +79,19 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="sd.bmp">
+    <Image Include="res\actors\soldier.bmp">
       <Filter>Resource Files</Filter>
     </Image>
-    <Image Include="sdm.bmp">
+    <Image Include="res\actors\soldier_mask.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\terrain\dirt.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\terrain\stone.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\terrain\void.bmp">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

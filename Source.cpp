@@ -1,3 +1,6 @@
+
+
+
 //
 //#define _CRT_SECURE_NO_WARNINGS 1
 //#include <stdio.h>      // for printf
@@ -9,6 +12,7 @@
 //void doody() {
 //    char buffer[_MAX_U64TOSTR_BASE2_COUNT];
 //    int r;
+//    (DWORD)0x00CC0020;
 //    DT_BOTTOM;
 //    RECT var = {};
 //    IMAGE_CURSOR;

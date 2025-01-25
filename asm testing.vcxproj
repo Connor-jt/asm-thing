@@ -146,11 +146,12 @@
     <MASM Include="SRC\actors\Actor.asm" />
     <MASM Include="SRC\actors\ActorBank.asm" />
     <MASM Include="SRC\actors\Pathfinding.asm" />
-    <MASM Include="SRC\actors\Sprite.asm" />
-    <MASM Include="SRC\actors\SpriteBank.asm" />
+    <MASM Include="SRC\sprites\ActorSprites.asm" />
     <MASM Include="SRC\Camera.asm" />
     <MASM Include="SRC\Game.asm" />
     <MASM Include="SRC\grid\MapGrid.asm" />
+    <MASM Include="SRC\sprites\SpriteRenderer.asm" />
+    <MASM Include="SRC\sprites\TerrainSprites.asm" />
     <MASM Include="SRC\input\ActorInstructions.asm" />
     <MASM Include="SRC\input\ActorSelect.asm" />
     <MASM Include="SRC\input\InputBank.asm" />
@@ -165,8 +166,11 @@
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="sdm.bmp" />
-    <Image Include="sd.bmp" />
+    <Image Include="res\actors\soldier_mask.bmp" />
+    <Image Include="res\actors\soldier.bmp" />
+    <Image Include="res\terrain\dirt.bmp" />
+    <Image Include="res\terrain\stone.bmp" />
+    <Image Include="res\terrain\void.bmp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\icons\cursor\1.cur" />

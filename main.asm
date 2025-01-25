@@ -67,7 +67,8 @@ dHwnd qword ?
 main PROC
 	sub rsp, 28h	; align stack + 'shadow space'
 	; load app resources
-		call LoadSpriteLibrary
+		call LoadActorSpriteLibrary
+		call LoadTerrainSpriteLibrary
 		call LoadBrushes
 	; [DEBUG] print out hello world
 		mov rdx, 1

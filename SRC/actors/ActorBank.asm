@@ -92,25 +92,21 @@ GetActorStatsFromPtr ENDP
 ; out rax: x pos
 ; out rdx: y pos
 GetActorWorldPos PROC
-	; config locals
-		xor rax, rax
-		xor rdx, rdx
-		;xor r8,  r8
 	; get actor tile position (sign extend so our negatives are fine)
-		movsx rax, word ptr [rcx+8]
-		movsx rdx, word ptr [rcx+10]
+		movsx eax, word ptr [rcx+8]
+		movsx edx, word ptr [rcx+10]
 	; adjust for pixel position
-		shl rax, 5
-		shl rdx, 5
+		shl eax, 5
+		shl edx, 5
 	; apply Y local tile offsets
-		mov r8b, byte ptr [rdx+12]
-		and r8b, 31
-		add rdx, r8b
+		movzx r8d, byte ptr [rdx+12]
+		and r8d, 31
+		add edx, r8d
 	; apply X local tile offsets
-		mov r8w, word ptr [rdx+12]
-		shr r8w, 5
-		and r8w, 31
-		add rax, r8w
+		movzx r8d, word ptr [rdx+12]
+		shr r8d, 5
+		and r8d, 31
+		add eax, r8d
 	; return
 		ret
 GetActorWorldPos ENDP
@@ -196,35 +192,19 @@ ActorBankTick PROC
 	ret
 ActorBankTick ENDP
 
-; rcx: hdc 
+; r12: actor ptr
+; rcx: hdc
 ActorBankRender PROC
-	sub rsp, 8
-	push r12 ; ptr to current actor
-	push r13 ; last address
-	lea r12, dActorList 
-	mov r13, r12
-	add r13, dLastActorIndex
-	lloop:
-		; break if we reached the last valid index
-			cmp r12, r13
-			je loop_end
-		; if current actor is valid
-			cmp dword ptr [r12], 0FFF00000h
-			jge block4
-				; r12: actor ptr (pass through)
-				; rcx: hdc (pass through)
-				call DrawActorSprite
-				call TryDrawActorHealth
-			block4:
-		; next iteration
-			add r12, SIZEOF_Actor
-			jmp lloop
-	loop_end:
-
-	pop r13
-	pop r12
-	add rsp, 8
-	ret
+	cmp r12, 0 ; check null ptr
+	je return
+	cmp dword ptr [r12], 0FFF00000h ; check invalid handle
+	jge return
+		sub rsp, 8
+		call DrawActorSprite
+		call TryDrawActorHealth
+		add rsp, 8
+	return:
+		ret
 ActorBankRender ENDP
 
 ; rcx: actor ptr

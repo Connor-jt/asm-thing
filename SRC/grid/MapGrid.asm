@@ -21,7 +21,7 @@ Grid qword 4096 dup(0) ; 64x64 ; 32kb !!
 ; 00000000 00000000 00000000 00000000 \ FFFFFFFF : actor handle | actor cluster handle
 ; +7       +6       +5       +4         +0
 
-
+; 0100000800000000h
 ; 
 .code
 
@@ -131,6 +131,14 @@ GridAccessOrCreateTilePtr PROC
 			mov qword ptr [r15+r14*8], rax
 			cmp rax, 0
 			je return_fail
+			; initialize memory
+			xor ecx, ecx
+			c06:
+				mov qword ptr [rax+rcx*8], 0
+				inc ecx
+				cmp ecx, 1024
+				jge c01
+			jmp c06
 		c00:
 	; check section index (quad) is valid, create a new quad if not
 		mov r15, rax
@@ -142,6 +150,14 @@ GridAccessOrCreateTilePtr PROC
 			mov qword ptr [r15+r13*8], rax
 			cmp rax, 0
 			je return_fail
+			; initialize memory
+			xor ecx, ecx
+			c06:
+				mov qword ptr [rax+rcx*8], 0105000800000000h
+				inc ecx
+				cmp ecx, 1024
+				jge c01
+			jmp c06
 		c01:
 	; get content of quad index (tile)
 		pop r15
@@ -239,10 +255,10 @@ GridDamageTile PROC
 				and ecx, 8
 			; subtract
 				sub ecx, r13d
-			; if health depleted, change tile type to cleared
+			; if health depleted, change tile state to cleared and type to path
 				jle c04
-					and rax, 0FFFFFFF3FFFFFFFFh
-					or  rax, 0400000000h
+					and rax, 00FFFFF3FFFFFFFFh ; clear type & state
+					or  rax, 0200000400000000h ; set type (2) & state (1)
 					xor ecx, ecx ; clamp health to min 0
 				c04:
 			; set new health value
@@ -332,60 +348,100 @@ GridIsTileClear ENDP
 	
 
 
-
+; rcx: hdc
 GridRendcer PROC
-	sub rsp, 8
-	; ecx: X tile position
-	; edx: Y tile position
-	; r8d: X tile count
-	; r9d: Y tile count
-	; r12 actor ptr??
-	push r13
-	push r14
-	push r15
-	push rbx
-	push rbp
-
+	; config locals
+		push r12 ; actor ptr
+		push r13 ; src tile X
+		push r14 ; tile Y
+		push r15 ; tile X
+		push rbx ; last X
+		push rbp ; hdc
+		; rsp+0 : last Y
+		mov rbp, rcx
 	; load camera values
-		mov ecx, dCameraX
-		mov edx, dCameraY
+		mov r13d, dCameraX
+		mov r14d, dCameraY
 	; calc amount of tiles onscreen
 		; get sub-tile camera offset
-			mov r8d, ecx
-			mov r9d, edx
-			and r8d, 31
-			and r9d, 31
+			mov ebx, r13d
+			mov eax, r14d
+			and ebx, 31
+			and eax, 31
 		; add in screen size
-			add r8d, dWinX
-			add r9d, dWinY
+			add ebx, dWinX
+			add eax, dWinY
 		; dec so we dont render an extra tile with count is perfectly even
-			dec r8d
-			dec r9d 
+			dec ebx
+			dec eax 
 		; convert pixel size to tile size
-			shr r8d, 5
-			shr r9d, 5
-		; increment count to make up for any partial tile
-			inc r8d
-			inc r9d
-	; adjust camera position if theres any partial tiles at the start
-		and ecx, 0FFFFFFE0h ; clear the lowest 5 bits
-		and edx, 0FFFFFFE0h ; clear the lowest 5 bits
+			shr ebx, 5
+			shr eax, 5
+	; convert camera position to tile position
+		shr r13d, 5
+		shr r14d, 5
+	; get our last position indexes
+		add ebx, r13d
+		add eax, r14d
+		push eax
+	; init local var
+		mov r15d, r13d
 
-	; loop all tiles
-	loop_row:
+	; iterate through rows
+		loop_row:
+			; iterate through columns
+				loop_column:
+					; access tile
+						mov edx, r14d
+						mov ecx, r15d
+						call GridAccessTile
+					; render tile type
+						mov r12, rax ; store for later
+						; convert tile coords to world coords
+							mov r8d, r15 ; X
+							mov r9d, r14 ; Y
+							shl r8d, 5
+							shl r9d, 5
+						; push hdc and call render
+							mov rcx, rbp ; hdc
+							call DrawTerrainSprite
+						mov rax, r12
 
-		loop_column:
+					; render actor
+						test rax, 0300000000h
+						jnz c04
+							mov ecx, eax ; get actor handle
+							call ActorPtrFromHandle
+							mov r12, rax ; actor ptr (does not matter if its null)
+							mov rcx, rbp ; hdc
+							call ActorBankRender
+						c04: 
 
+					; increment
+						inc r15d
+					; break if finished
+						cmp r15d, ebx
+						jg finish_columns
+				jmp loop_column
+				finish_columns:
+			; increment
+				mov r15d, r13d
+				inc r14d
+			; break if finished
+				cmp r14d, dword ptr [rsp] ; last Y
+				jg finish_loop
+		jmp loop_row
+		finish_loop:
 
-
-
-
-
-
-
-
-	add rsp, 8
-	ret
+	; return
+		add rsp, 8
+		pop rbp
+		pop rbx
+		pop r15
+		pop r14
+		pop r13
+		pop r12
+		ret
 GridRendcer ENDP
 
 END
