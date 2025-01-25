@@ -112,23 +112,23 @@ GetActorWorldPos PROC
 GetActorWorldPos ENDP
 
 ; rcx: actor ptr (pass through)
-; out rax: x pos
-; out rdx: y pos
+; out eax: x pos
+; out edx: y pos
 GetActorScreenPos PROC
 	; get actual position
 		call GetActorWorldPos
 	; adjust for screen space
-		sub rax, dCameraX
-		sub rdx, dCameraY
+		sub eax, dCameraX
+		sub edx, dCameraY
 	; return
 		ret
 GetActorScreenPos ENDP
 
 
 
-; r8w: y tile
-; dx: x tile
-; cl: unit type
+; r8d: y tile
+; edx: x tile
+; ecx: unit type
 ActorBankCreate PROC
 	; get new actor address
 		lea r10, dActorList
@@ -140,10 +140,11 @@ ActorBankCreate PROC
 		mov byte ptr [rdx+7], al ; action cooldown
 	; write actor index into our handle
 		mov rax, dLastActorIndex
-		mov rdx, SIZEOF_Actor
-		div rdx
-		shl rdx, 20 ; shift handle index into the uppest 12 bits
-		or  ecx, rdx
+		mov edi, SIZEOF_Actor
+		xor edx, edx
+		div edi
+		shl eax, 20 ; shift handle index into the uppest 12 bits
+		or  ecx, eax
 	; write reuse index into our handle (NOT SUPPORTED YET!!!!)
 	; increment actor index for the next call
 		add dLastActorIndex, SIZEOF_Actor

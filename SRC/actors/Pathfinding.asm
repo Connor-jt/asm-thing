@@ -1,6 +1,6 @@
+GridTilePathingCost PROTO
 
-
-
+.data 
 neighbor_grid byte 256 dup(0)
 
 next_neighbor_list byte 256 dup(0)
@@ -65,7 +65,7 @@ BeginPathfind PROC
 		xor eax, eax
 		lea rsi, neighbor_grid
 		b47: 
-			mov qword ptr [rsi + eax*8], 0
+			mov qword ptr [rsi + rax*8], 0
 			inc eax
 			cmp eax, 32
 			jge b48
@@ -482,7 +482,7 @@ ProcessTile PROC
 			cmp edi, 0
 			jne b58
 			; if this node is on par with our current route, then shortcut it for our next evaluation
-				cmp esi, r15
+				cmp esi, r15d
 				jg b57 ; NOTE: this should also include less than, but that would be an impossible state to reach
 					mov r14, r12
 				b57:
@@ -504,3 +504,4 @@ ProcessTile PROC
 		ret
 ProcessTile ENDP
 
+END

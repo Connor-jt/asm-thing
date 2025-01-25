@@ -1,6 +1,13 @@
 
-exterm ReleaseActor
-
+ReleaseActor PROTO
+GridAccessTile PROTO
+GridDamageTile PROTO
+GridWriteActorAt PROTO
+BeginPathfind PROTO
+GridClearActorAt PROTO
+GetActorStatsFromPtr PROTO
+ActorPtrFromHandle PROTO 
+ReleaseActor PROTO
 
 .code
 
@@ -11,17 +18,17 @@ ActorStepHelper PROC
 		mov ecx, r13d ; x
 		call GridAccessTile
 	; if tile has actors on it
-		test rax, 0300000000h
+		shr rax, 32
+		test rax, 03h
 		jnz return ; TODO: auto attack if an enemy is on the tile
 	; if tile uninitialized
-		mov rcx, rax 
-		and rcx, 0C00000000h
+		and rax, 0Ch
 		jz damage_tile
 	; if tile has health
-		cmp rcx, 0800000000h
+		cmp rax, 08h
 		je damage_tile
 	; if tile is clear
-		cmp rcx, 0400000000h
+		cmp rax, 04h
 		je move_tile
 	; otherwise indestructible blocker 
 		jmp return
@@ -72,7 +79,7 @@ ActorTick PROC
 				cmp ecx, 64
 			; if no predetermined steps, run pathfind
 				jge b92
-					push ecx ; store for later
+					push rcx ; store for later
 					movzx r9d, word ptr [r12 + 18] ; dest Y
 					movzx r8d, word ptr [r12 + 16] ; dest X
 					movzx edx, word ptr [r12 + 10] ; src Y
@@ -82,7 +89,7 @@ ActorTick PROC
 					cmp eax, 64
 					jl complete_objective
 					; otherwise, paste that info into our actor position state
-					pop ecx
+					pop rcx
 					and ecx, 3 ; clear bits
 					or ecx, eax ; write bits
 					mov byte ptr [r12+13], cl
@@ -112,7 +119,7 @@ ActorTick PROC
 						and eax, 31
 					; if not immienent tile jump, just sub offset
 						cmp eax, 0
-						jle b94:
+						jle b94
 							sub word ptr [r12+12], 32
 							jmp b93
 						b94:
@@ -141,7 +148,7 @@ ActorTick PROC
 						and eax, 31
 					; if not immienent tile jump, just add offset
 						cmp eax, 31
-						jle b95:
+						jle b95
 							add word ptr [r12+12], 32
 							jmp b93
 						b95:
@@ -169,7 +176,7 @@ ActorTick PROC
 						and eax, 31
 					; if not immienent tile jump, just sub offset
 						cmp eax, 0
-						jle b96:
+						jle b96
 							dec word ptr [r12+12]
 							jmp b93
 						b96:
@@ -198,7 +205,7 @@ ActorTick PROC
 						and eax, 31
 					; if not immienent tile jump, just add offset
 						cmp eax, 31
-						jle b97:
+						jle b97
 							inc word ptr [r12+12]
 							jmp b93
 						b97:

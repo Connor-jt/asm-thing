@@ -1,7 +1,8 @@
 
 DeleteDC PROTO
-
-
+LoadSprite PROTO
+GetActorWorldPos PROTO
+DrawSpriteMasked PROTO
 
 SIZEOF_Sprite EQU 28
 SIZEOF_SpriteBuffer EQU 28 ; SIZEOF_Sprite * 1 sprite

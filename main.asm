@@ -18,7 +18,8 @@ PeekMessageW PROTO
 Sleep PROTO
 LoadImageW PROTO
 
-LoadSpriteLibrary PROTO ; sprite library entry
+LoadActorSpriteLibrary PROTO ; sprite library entry
+LoadTerrainSpriteLibrary PROTO ; sprite library entry
 LoadBrushes PROTO
 TestRender PROTO ; render entry
 GameTick PROTO

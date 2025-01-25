@@ -152,19 +152,20 @@ GridAccessOrCreateTilePtr PROC
 			je return_fail
 			; initialize memory
 			xor ecx, ecx
-			c06:
-				mov qword ptr [rax+rcx*8], 0105000800000000h
+			mov rdx, 0105000800000000h ; we have to do this because we cant move 64 bit consts into memory address
+			c07:
+				mov qword ptr [rax+rcx*8], rdx
 				inc ecx
 				cmp ecx, 1024
 				jge c01
-			jmp c06
+			jmp c07
 		c01:
 	; get content of quad index (tile)
+		lea rax, qword ptr [rax+r12*8]
 		pop r15
 		pop r14
 		pop r13
 		pop r12
-		lea rax, qword ptr [rdx+r12*8]
 		ret
 	return_fail:
 		pop r15
@@ -197,7 +198,8 @@ GridClearActorAt PROC
 		cmp rax, 0
 		je return
 	; clear actor bits
-		and qword ptr [rax], 0FFFFFFFC00000000h
+		mov rdx, 0FFFFFFFC00000000h ; cant directly AND with 64bit consts 
+		and qword ptr [rax], rdx
 	return:
 		ret
 GridClearActorAt ENDP
@@ -214,10 +216,12 @@ GridWriteActorAt PROC
 		je return
 	; pack data to write to tile
 		mov ecx, r8d ; clear higher bits
-		or ecx, 100000000h
+		mov r8, 100000000h
+		or rcx, r8
 	; write actor to tile
 		mov rdx, qword ptr [rax]
-		and rdx, 0FFFFFFFC00000000h ; clear actor bits
+		mov r8, 0FFFFFFFC00000000h
+		and rdx, r8 ; clear actor bits
 		or rdx, rcx ; write new actor bits
 		mov qword ptr [rax], rdx
 	return:
@@ -344,7 +348,7 @@ GridTilePathingCost PROC
 	return_basic_block:
 		mov eax, 1
 		ret
-GridIsTileClear ENDP
+GridTilePathingCost ENDP
 	
 
 
