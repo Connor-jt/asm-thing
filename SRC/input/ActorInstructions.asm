@@ -48,7 +48,7 @@ ActorInstructionsTick PROC
 				je loop_end
 			; fetch current actor ptr
 				lea rcx, dSelectedActorsList
-				mov rcx, qword ptr [rcx+r13*8]
+				mov ecx, dword ptr [rcx+r13*4]
 				call ActorPtrFromHandle
 			; if returned ptr is null, goto next iteration
 				test rax, rax

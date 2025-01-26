@@ -1,6 +1,9 @@
 DrawActorSprite	PROTO
 TryDrawActorHealth PROTO
 ActorTick PROTO
+GridAccessTile PROTO
+GridWriteActorAt PROTO
+ConsolePrint PROTO
 
 extern dCameraX : dword
 extern dCameraY : dword
@@ -17,6 +20,7 @@ dActorList byte 98256 dup(0) ; 24 bytes x 4094 actors ; we dont use the last one
 dLastActorIndex qword 0 ; index * 24
 dFirstFreeIndex qword 0 ; index * 24
 
+actor_placement_failed_str word 'a','c','t','o','r',' ','p','l','a','c','e','m','e','n','t',' ','b','l','o','c','k','e','d','!','!',0
 
 ; Actor struct
 ;	0h, 4 : handle
@@ -99,11 +103,11 @@ GetActorWorldPos PROC
 		shl eax, 5
 		shl edx, 5
 	; apply Y local tile offsets
-		movzx r8d, byte ptr [rdx+12]
+		movzx r8d, byte ptr [rcx+12]
 		and r8d, 31
 		add edx, r8d
 	; apply X local tile offsets
-		movzx r8d, word ptr [rdx+12]
+		movzx r8d, word ptr [rcx+12]
 		shr r8d, 5
 		and r8d, 31
 		add eax, r8d
@@ -126,10 +130,31 @@ GetActorScreenPos ENDP
 
 
 
-; r9w: y tile
-; r8w: x tile
+; r9d: y tile
+; r8d: x tile
 ; ecx: unit type
 ActorBankCreate PROC
+	; make sure the target tile is clear
+		push rcx
+		push r8
+		push r9
+		; get tile data
+			mov edx, r9d
+			mov ecx, r8d
+			call GridAccessTile
+			shr rax, 32
+		; fail if actors on tile
+			test rax, 03h
+			jnz return_fail 
+		; fail if tile is not cleared path
+			and rax, 0Ch
+			cmp rax, 04h
+			jne return_fail
+		pop r9
+		pop r8
+		pop rcx
+
+
 	; get new actor address
 		lea r10, dActorList
 		add r10, dLastActorIndex
@@ -161,10 +186,29 @@ ActorBankCreate PROC
 		mov word ptr [r10+14], 0 ; ??? unused
 		mov dword ptr [r10+20], 0 ; ???? unused
 	; place this actor into a tile???
-
+		
+	; clear tile before putting actor onto it?
+	move_tile:
+		; write new pos
+			mov edx, r9d ; y
+			mov ecx, r8d ; x
+			mov r8d, dword ptr [r10] ; handle
+			call GridWriteActorAt
 	; complete
 		mov rax, r10
 		ret
+	return_fail:
+		; release locals
+			pop r9
+			pop r8
+			pop rcx
+		; write error to console
+			mov rdx, 1
+			lea rcx, actor_placement_failed_str
+			call ConsolePrint
+		; return
+			xor eax, eax
+			ret
 ActorBankCreate ENDP
 
 ; no inputs
@@ -181,7 +225,7 @@ ActorBankTick PROC
 			je loop_end
 		; if current actor is valid
 			cmp dword ptr [r12], 0FFF00000h
-			jge block3
+			jle block3
 				call ActorTick
 			block3:
 		; next iteration
@@ -201,7 +245,7 @@ ActorBankRender PROC
 	cmp r12, 0 ; check null ptr
 	je return
 	cmp dword ptr [r12], 0FFF00000h ; check invalid handle
-	jge return
+	jle return
 		sub rsp, 8
 		call DrawActorSprite
 		call TryDrawActorHealth

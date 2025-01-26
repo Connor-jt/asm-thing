@@ -150,9 +150,9 @@ DrawSpriteMasked PROC
 		push qword ptr [r13+8] ; mask hdc src
 		push r11 ; src y
 		push r10 ; src x
-		push qword ptr [r13+10h] ; hdc src
 	; load sprite HDC 
 		call SetSpriteDevice
+		push qword ptr [r13+10h] ; hdc src ; do AFTER bitmap hdc is generated!!!
 	; translate pos to local screen pos
 		sub r14d, dCameraX
 		sub r15d, dCameraY

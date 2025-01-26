@@ -36,9 +36,9 @@
 
 cActorSelectedStr dw 'A','c','t','o','r',' ','c','o','u','n','t',0
 
-dSelectedActorsList qword MAX_SELECTED_ACTORS dup(0) ; 100 selected actor slots
+dSelectedActorsList dword MAX_SELECTED_ACTORS dup(0) ; 100 selected actor slots
 dSelectedActorsCount dword 0
-dHoveredActor qword 0
+dHoveredActor dword -1
 
 dOriginalMouseX dword 0
 dOriginalMouseY dword 0
@@ -65,7 +65,7 @@ ActorSelectRender PROC
 				cmp r13d, dSelectedActorsCount
 				je loop_end
 			; fetch current actor ptr
-				mov rcx, qword ptr [r12+r13*8]
+				mov rcx, qword ptr [r12+r13*4]
 				call ActorPtrFromHandle
 				mov r14, rax
 			; if returned ptr is null, goto next iteration
@@ -77,7 +77,7 @@ ActorSelectRender PROC
 				; r10d: low_y
 				; r11d: high_y
 				; verify actor is on screen
-					mov rcx, r12
+					mov rcx, r14
 					call GetActorScreenPos
 					mov r8d, eax
 					mov r10d, edx
@@ -121,10 +121,10 @@ ActorSelectRender PROC
 
 	; render border for hovered actor
 		; skip if no hovered actor
-			cmp dHoveredActor, 0
+			cmp dHoveredActor, -1
 			je skip_hover_border
 		; fetch current actor ptr
-			mov rcx, dHoveredActor
+			mov ecx, dHoveredActor
 			call ActorPtrFromHandle
 			mov r12, rax
 		; if actor null, skip
@@ -137,7 +137,7 @@ ActorSelectRender PROC
 				mov r8d, eax
 				mov r10d, edx
 			; get curr actor sprite size
-				mov rcx, rax
+				mov rcx, r12
 				call GetActorSprite
 				mov eax, dword ptr [rax+18h]
 				shr eax, 1 ; half it
@@ -246,13 +246,13 @@ ActorSelectTick PROC
 						cmp dSelectedActorsCount, MAX_SELECTED_ACTORS
 						je b26
 					; verify that we are hovering over an actor
-						cmp dHoveredActor, 0
+						cmp dHoveredActor, -1
 						je b26
 					; write hovered actor
 						lea rcx, dSelectedActorsList
 						mov edx, dSelectedActorsCount
-						mov rax, dHoveredActor
-						mov qword ptr [rcx+rdx*8], rax
+						mov eax, dHoveredActor
+						mov dword ptr [rcx+rdx*4], eax
 					; inc selected count
 						inc dSelectedActorsCount
 				b26:
@@ -280,7 +280,6 @@ SelectActorWithinRect PROC
 		lea r12, dActorList 
 		mov rsi, r12
 		add rsi, dLastActorIndex ; last address
-		xor rdi, rdi ; actor index
 	; get select rect
 		call GetSelectRect
 		test rax, rax
@@ -292,7 +291,7 @@ SelectActorWithinRect PROC
 			je return
 		; if current actor is valid
 			cmp dword ptr [r12], 0FFF00000h
-			jge b20
+			jle b20
 				; get actor pos
 					mov rcx, r12
 					call GetActorScreenPos
@@ -312,19 +311,15 @@ SelectActorWithinRect PROC
 								cmp dSelectedActorsCount, MAX_SELECTED_ACTORS
 								je return
 								; get actor index & handle and write to thing buffer
-								mov rcx, rdi
-								shl rcx, 32
-								mov eax, dword ptr [r12]
-								or rax, rcx
 								lea rcx, dSelectedActorsList
 								mov edx, dSelectedActorsCount
-								mov qword ptr [rcx+rdx*8], rax
+								mov eax, dword ptr [r12]
+								mov dword ptr [rcx+rdx*4], eax
 								; inc selected count
 								inc dSelectedActorsCount
 			b20:
 		; next iteration
 			add r12, SIZEOF_Actor
-			inc rdi
 			jmp lloop
 	return:
 		add rsp, 8 ; pop r8
@@ -343,8 +338,7 @@ SetHoveredActor PROC
 		lea r12, dActorList 
 		mov rsi, r12
 		add rsi, dLastActorIndex ; last address
-		xor rdi, rdi ; actor index
-		mov dHoveredActor, 0
+		mov dHoveredActor, -1
 	; store mouse pos
 		mov r11d, dMouseX
 		mov r9d, dMouseY
@@ -354,7 +348,7 @@ SetHoveredActor PROC
 			je return
 		; if current actor is valid
 			cmp dword ptr [r12], 0FFF00000h
-			jge b28
+			jle b28
 				; fetch actor size
 					mov rcx, r12
 					call GetActorSprite
@@ -381,17 +375,13 @@ SetHoveredActor PROC
 							add edx, r10d
 							cmp edx, r9d
 							jl b28
-								; get actor index & handle and write to thing buffer
-								mov rcx, rdi
-								shl rcx, 32
+								; set hovered actor to current actor handle
 								mov eax, dword ptr [r12]
-								or rax, rcx
-								mov dHoveredActor, rax
+								mov dHoveredActor, eax
 								jmp return
 			b28:
 		; next iteration
 			add r12, SIZEOF_Actor
-			inc rdi
 			jmp lloop
 	return:
 		pop r12

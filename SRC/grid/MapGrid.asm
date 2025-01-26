@@ -373,7 +373,7 @@ GridTilePathingCost ENDP
 ; rcx: hdc
 GridRender PROC
 	; config locals
-		push r12 ; actor ptr
+		push r12 ; src tile Y, then actor ptr
 		push r13 ; src tile X
 		push r14 ; tile Y
 		push r15 ; tile X
@@ -406,10 +406,12 @@ GridRender PROC
 		add ebx, r13d
 		add eax, r14d
 		push rax
-	; init local var
+	; reset X pos
 		mov r15d, r13d
+	; store Y reset for 2nd pass
+		mov r12d, r14d 
 
-	; iterate through rows
+	; iterate through terrain sprites
 		loop_row:
 			; iterate through columns
 				loop_column:
@@ -417,29 +419,14 @@ GridRender PROC
 						mov edx, r14d
 						mov ecx, r15d
 						call GridAccessTile
-					; render tile type
-						mov r12, rax ; store for later
-						; convert tile coords to world coords
-							mov r8d, r15d ; X
-							mov r9d, r14d ; Y
-							shl r8d, 5
-							shl r9d, 5
-						; push hdc and call render
-							mov rcx, rbp ; hdc
-							call DrawTerrainSprite
-						mov rax, r12
-
-					; render actor
-						mov r8, 0300000000h
-						test rax, r8
-						jz c04
-							mov ecx, eax ; get actor handle
-							call ActorPtrFromHandle
-							mov r12, rax ; actor ptr (does not matter if its null)
-							mov rcx, rbp ; hdc
-							call ActorBankRender
-						c04: 
-
+					; convert tile coords to world coords
+						mov r8d, r15d ; X
+						mov r9d, r14d ; Y
+						shl r8d, 5
+						shl r9d, 5
+					; push hdc and call render
+						mov rcx, rbp ; hdc
+						call DrawTerrainSprite
 					; increment
 						inc r15d
 					; break if finished
@@ -455,6 +442,48 @@ GridRender PROC
 				jg finish_loop
 		jmp loop_row
 		finish_loop:
+
+		
+	; reset Y pos
+		mov r14d, r12d
+	; reset X pos
+		mov r15d, r13d
+	; iterate through actor sprites
+		__loop_row:
+			; iterate through columns
+				__loop_column:
+					; access tile
+						mov edx, r14d
+						mov ecx, r15d
+						call GridAccessTile
+					; render actor
+						mov r8, 0300000000h
+						test rax, r8
+						jz c04
+							mov ecx, eax ; get actor handle
+							call ActorPtrFromHandle
+							mov r12, rax ; actor ptr (does not matter if its null)
+							mov rcx, rbp ; hdc
+							call ActorBankRender
+						c04: 
+					; increment
+						inc r15d
+					; break if finished
+						cmp r15d, ebx
+						jg __finish_columns
+				jmp __loop_column
+				__finish_columns:
+			; increment
+				mov r15d, r13d
+				inc r14d
+			; break if finished
+				cmp r14d, dword ptr [rsp] ; last Y
+				jg __finish_loop
+		jmp __loop_row
+		__finish_loop:
+	
+
+
 
 	; return
 		add rsp, 8
