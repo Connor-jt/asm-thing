@@ -160,7 +160,8 @@ ActorBankCreate PROC
 		mov word ptr [r10+12], 528 ; position state
 		mov word ptr [r10+14], 0 ; ??? unused
 		mov dword ptr [r10+20], 0 ; ???? unused
-	; write in default 
+	; place this actor into a tile???
+
 	; complete
 		mov rax, r10
 		ret

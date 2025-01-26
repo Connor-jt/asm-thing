@@ -432,7 +432,7 @@ GridRender PROC
 					; render actor
 						mov r8, 0300000000h
 						test rax, r8
-						jnz c04
+						jz c04
 							mov ecx, eax ; get actor handle
 							call ActorPtrFromHandle
 							mov r12, rax ; actor ptr (does not matter if its null)
