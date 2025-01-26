@@ -1,6 +1,7 @@
 
 DeleteDC PROTO
 LoadSprite PROTO
+DrawSpriteOpaque PROTO
 
 
 SIZEOF_Sprite EQU 28

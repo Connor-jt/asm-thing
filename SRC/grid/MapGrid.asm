@@ -1,6 +1,16 @@
 
-malloc PROTO
+GlobalAlloc PROTO
+ActorTakeDamage PROTO
+ActorBankRender PROTO
+DrawTerrainSprite PROTO
+ActorPtrFromHandle PROTO
 
+
+extern dCameraX : dword
+extern dCameraY : dword
+
+extern dWinX : dword
+extern dWinY : dword
 
 .data
 
@@ -26,7 +36,8 @@ Grid qword 4096 dup(0) ; 64x64 ; 32kb !!
 .code
 
 ; [OUTPUT] rax: mempointer
-; rcx: count
+; rdx: count
+; rcx: flags (https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-globalalloc)
 LazyAlignMalloc PROC
 	; NOTE: since we stopped correctly managing RSP alignment at some point, we have to dynamically align RSP to 16 bytes here
 	push r12
@@ -34,7 +45,7 @@ LazyAlignMalloc PROC
 	and r12, 8
 	add r12, 20h ; shadow space
 	sub rsp, r12
-	call malloc
+	call GlobalAlloc 
 	add rsp, r12
 	pop r12
 	ret
@@ -79,7 +90,8 @@ GridCoordsToIndex PROC
 	; get grid layer coords
 		shr ecx, 5
 		shr edx, 5
-		;and ecx, 63 ; likely not necessary
+		and ecx, 63
+		and edx, 63
 		; combine Y into X
 		shl edx, 6
 		or  ecx, edx
@@ -126,26 +138,20 @@ GridAccessOrCreateTilePtr PROC
 		mov rax, qword ptr [r15+r14*8]
 		cmp rax, 0
 		jne c00
-			mov ecx, 8192 ; byte size of a section
+			mov edx, 8192 ; byte size of a section
+			mov ecx, 40h ; zero initialize mem
 			call LazyAlignMalloc
 			mov qword ptr [r15+r14*8], rax
 			cmp rax, 0
 			je return_fail
-			; initialize memory
-			xor ecx, ecx
-			c06:
-				mov qword ptr [rax+rcx*8], 0
-				inc ecx
-				cmp ecx, 1024
-				jge c01
-			jmp c06
 		c00:
 	; check section index (quad) is valid, create a new quad if not
 		mov r15, rax
 		mov rax, qword ptr [r15+r13*8]
 		cmp rax, 0
 		jne c01
-			mov ecx, 8192 ; byte size of a quadrant
+			mov edx, 8192 ; byte size of a quadrant
+			xor ecx, ecx ; do not zero initialize mem
 			call LazyAlignMalloc
 			mov qword ptr [r15+r13*8], rax
 			cmp rax, 0
@@ -247,10 +253,12 @@ GridDamageTile PROC
 		mov r12, rax
 		mov rax, qword ptr [r12]
 		; if has actors
-			test rax, 0300000000h
+			mov r8, 0300000000h
+			test rax, r8
 			jnz damage_actor 
 		; skip if not damageable (unintialized 0b00 or destructible 0b10)
-			test rax, 0400000000h
+			mov r8, 0400000000h
+			test rax, r8
 			jnz return_pop
 		damage_tile:
 			; get health
@@ -261,13 +269,18 @@ GridDamageTile PROC
 				sub ecx, r13d
 			; if health depleted, change tile state to cleared and type to path
 				jle c04
-					and rax, 00FFFFF3FFFFFFFFh ; clear type & state
-					or  rax, 0200000400000000h ; set type (2) & state (1)
+					; clear type & state
+						mov r8, 00FFFFF3FFFFFFFFh
+						and rax, r8 
+					; set type (2) & state (1)
+						mov r8, 0200000400000000h
+						or  rax, r8 
 					xor ecx, ecx ; clamp health to min 0
 				c04:
 			; set new health value
 				shl rcx, 48
-				and rax, 0FF00FFFFFFFFFFFFh
+				mov r8, 0FF00FFFFFFFFFFFFh
+				and rax, r8
 				or rax, rcx
 			; write changes
 				mov qword ptr [r12], rax
@@ -317,17 +330,21 @@ GridTilePathingCost PROC
 		cmp rax, 0
 		je return_basic_block
 	; check if tile has actors on it
-		test rax, 0300000000h
+		mov rdx, 0300000000h
+		test rax, rdx
 		jnz return_impassible 
 	; check tile state (and return if its uninitialized)
 		mov rcx, rax 
-		and rcx, 0C00000000h
+		mov rdx, 0C00000000h
+		and rcx, rdx
 		jz return_basic_block
 	; check if tile is clear
-		cmp rcx, 0400000000h
+		mov rdx, 0400000000h
+		cmp rcx, rdx
 		je return_clear_path
 	; check if tile has health
-		cmp rcx, 0800000000h
+		mov rdx, 0800000000h
+		cmp rcx, rdx
 		je return_destructible_block
 	; check if tile is an indestructible blocker 
 	; NOTE: this is the default fallback case, so we dont actually need to check
@@ -353,7 +370,7 @@ GridTilePathingCost ENDP
 
 
 ; rcx: hdc
-GridRendcer PROC
+GridRender PROC
 	; config locals
 		push r12 ; actor ptr
 		push r13 ; src tile X
@@ -387,7 +404,7 @@ GridRendcer PROC
 	; get our last position indexes
 		add ebx, r13d
 		add eax, r14d
-		push eax
+		push rax
 	; init local var
 		mov r15d, r13d
 
@@ -402,8 +419,8 @@ GridRendcer PROC
 					; render tile type
 						mov r12, rax ; store for later
 						; convert tile coords to world coords
-							mov r8d, r15 ; X
-							mov r9d, r14 ; Y
+							mov r8d, r15d ; X
+							mov r9d, r14d ; Y
 							shl r8d, 5
 							shl r9d, 5
 						; push hdc and call render
@@ -412,7 +429,8 @@ GridRendcer PROC
 						mov rax, r12
 
 					; render actor
-						test rax, 0300000000h
+						mov r8, 0300000000h
+						test rax, r8
 						jnz c04
 							mov ecx, eax ; get actor handle
 							call ActorPtrFromHandle
@@ -446,6 +464,6 @@ GridRendcer PROC
 		pop r13
 		pop r12
 		ret
-GridRendcer ENDP
+GridRender ENDP
 
 END

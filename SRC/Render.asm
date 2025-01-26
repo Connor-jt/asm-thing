@@ -17,6 +17,9 @@ DebugUITickEnd PROTO
 DebugUITick PROTO
 DebugUIRender PROTO
 
+GridRender PROTO
+ReleaseActorSpriteHDCs PROTO
+ReleaseTerrainSpriteHDCs PROTO
 
 ActorBankRender PROTO ; sprite entry
 ReleaseSpriteHDCs PROTO ; spritebank entry

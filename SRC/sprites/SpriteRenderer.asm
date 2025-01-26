@@ -17,7 +17,7 @@ extern dCameraY : dword
 
 
 ; r9: bitmap object ptr
-; r8: bitmap size (x & y will be the same)
+; r8d: bitmap size (x & y will be the same)
 ; rdx: maskmap path ptr
 ; rcx: bitmap path ptr
 LoadSprite PROC
@@ -29,7 +29,7 @@ LoadSprite PROC
 		mov r13, rdx ; mask map
 	; configure static variables (including the input size var)
 		mov qword ptr[r9+10h], 0
-		mov qword ptr[r9+18h], r8
+		mov dword ptr[r9+18h], r8d
 	; load bitmap
 		push 10h ; fuload
 		push 0 ; cy
@@ -110,8 +110,8 @@ DrawSpriteOpaque PROC
 		push 0 ; src y
 		push 0 ; src x
 		push qword ptr [r13+10h] ; hdc src
-		mov r9d, qword ptr [r13+18h] ; width
-		push r9d ; height
+		mov r9d, dword ptr [r13+18h] ; width
+		push r9 ; height
 		mov r8d, r15d ; y
 		mov edx, r14d ; x
 		mov rcx, r12 ; hdc
@@ -145,11 +145,11 @@ DrawSpriteMasked PROC
 		mov r15d, r9d
 	; preconfig maskblt params
 		push 0AACC0020h ; copy src foreground, maintain dst background ; copy op (00CC0020h)
-		push r11d ; mask y
-		push r10d ; mask x
+		push r11 ; mask y
+		push r10 ; mask x
 		push qword ptr [r13+8] ; mask hdc src
-		push r11d ; src y
-		push r10d ; src x
+		push r11 ; src y
+		push r10 ; src x
 		push qword ptr [r13+10h] ; hdc src
 	; load sprite HDC 
 		call SetSpriteDevice
@@ -157,8 +157,8 @@ DrawSpriteMasked PROC
 		sub r14d, dCameraX
 		sub r15d, dCameraY
 	; draw
-		mov r9d, qword ptr [r13+18h] ; width
-		push r9d ; height
+		mov r9d, dword ptr [r13+18h] ; width
+		push r9 ; height
 		mov r8d, r15d ; y
 		mov edx, r14d ; x
 		mov rcx, r12 ; hdc
