@@ -54,15 +54,17 @@ ActorInstructionsTick PROC
 				test rax, rax
 				jz loop_next
 			; set actor to moveto objective mode
-				and byte ptr [rax+4], 207 ; clear objective bits
-				or byte ptr [rax+4], 16 ; write move to objective
+				and byte ptr [rax+4], 249 ; clear objective bits
+				or byte ptr [rax+4], 2 ; write move to objective
 			; finally, assign the new destination
 				mov edx, dMouseX
 				add edx, dCameraX
 				mov ecx, dMouseY
 				add ecx, dCameraY
-				mov dword ptr [rax+16], edx ; target x
-				mov dword ptr [rax+20], ecx ; target y
+				shr ecx, 5
+				shr edx, 5
+				mov word ptr [rax+16], dx ; target x
+				mov word ptr [rax+18], cx ; target y
 			loop_next:
 				inc r13d
 				jmp lloop

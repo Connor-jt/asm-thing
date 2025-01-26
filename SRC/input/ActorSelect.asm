@@ -197,7 +197,7 @@ ActorSelectTick PROC
 	; find our currently hovered actor
 		call SetHoveredActor
 
-	; if left mouse pressed
+	; if right mouse pressed
 		lea rcx, dKeyMap
 		mov al, byte ptr [rcx+2]
 		cmp al, 0

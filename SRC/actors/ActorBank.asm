@@ -79,7 +79,7 @@ GetActorStats ENDP
 
 ; r12: unit ptr (pass through)
 GetActorStatsFromPtr PROC
-	mov cl, byte ptr [r12]
+	movzx ecx, byte ptr [r12]
 	call GetActorStats
 	ret
 GetActorStatsFromPtr ENDP
@@ -126,18 +126,19 @@ GetActorScreenPos ENDP
 
 
 
-; r8d: y tile
-; edx: x tile
+; r9w: y tile
+; r8w: x tile
 ; ecx: unit type
 ActorBankCreate PROC
 	; get new actor address
 		lea r10, dActorList
 		add r10, dLastActorIndex
-		and rcx, 255
+		and ecx, 255
 	; write in defaults from stats (do it here because it wants our ecx type)
 		call GetActorStats
-		mov byte ptr [rdx+6], ah ; health
-		mov byte ptr [rdx+7], al ; action cooldown
+		mov byte ptr [r10+7], al ; action cooldown
+		shr rax, 8
+		mov byte ptr [r10+6], al ; health
 	; write actor index into our handle
 		mov rax, dLastActorIndex
 		mov edi, SIZEOF_Actor
@@ -151,14 +152,14 @@ ActorBankCreate PROC
 	; write handle to new actor object
 		mov dword ptr [r10], ecx
 	; write tile position
-		mov word ptr [r10+8], dx ; x
-		mov word ptr [r10+10], r8w ; y
+		mov word ptr [r10+8], r8w ; x
+		mov word ptr [r10+10], r9w ; y
 	; write blanks
-		mov byte ptr [rdx+4], 0 ; state
-		mov byte ptr [rdx+5], 0 ; ??? unused
-		mov word ptr [rdx+12], 528 ; position state
-		mov word ptr [rdx+14], 0 ; ??? unused
-		mov qword ptr [r10+16], 0 ; target 
+		mov byte ptr [r10+4], 0 ; state
+		mov byte ptr [r10+5], 0 ; ??? unused
+		mov word ptr [r10+12], 528 ; position state
+		mov word ptr [r10+14], 0 ; ??? unused
+		mov dword ptr [r10+20], 0 ; ???? unused
 	; write in default 
 	; complete
 		mov rax, r10

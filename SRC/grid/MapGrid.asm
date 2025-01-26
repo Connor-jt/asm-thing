@@ -260,15 +260,15 @@ GridDamageTile PROC
 			mov r8, 0400000000h
 			test rax, r8
 			jnz return_pop
-		damage_tile:
+		; damage_tile
 			; get health
 				mov rcx, rax
 				shr rcx, 48
-				and ecx, 8
+				and ecx, 255
 			; subtract
 				sub ecx, r13d
 			; if health depleted, change tile state to cleared and type to path
-				jle c04
+				jg c04
 					; clear type & state
 						mov r8, 00FFFFF3FFFFFFFFh
 						and rax, r8 
@@ -278,6 +278,7 @@ GridDamageTile PROC
 					xor ecx, ecx ; clamp health to min 0
 				c04:
 			; set new health value
+				and rcx, 255
 				shl rcx, 48
 				mov r8, 0FF00FFFFFFFFFFFFh
 				and rax, r8

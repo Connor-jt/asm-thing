@@ -13,10 +13,11 @@ CameraTick PROTO
 ActorBankTick PROTO
 ActorSelectTick PROTO
 ActorInstructionsTick PROTO
+GridDamageTile PROTO
 
 .data
 cLMouseDownStr word 'L','e','f','t',' ','m','o','u','s','e',' ','w','a','s',' ','p','r','e','s','s','e','d','!','!',0
-
+cRMouseDownStr word 'r','i','g','h','t',' ','m','o','u','s','e',' ','p','r','e','s','s','e','d',' ','!','!',0
 
 .code
 
@@ -48,13 +49,41 @@ GameTick PROC
 					lea rcx, cLMouseDownStr
 					call ConsolePrint
 				; create actor
-					mov r8d, dMouseY
-					add r8d, dCameraY
-					mov edx, dMouseX
-					add edx, dCameraX
-					mov ecx, 0
+					mov r9d, dMouseY
+					add r9d, dCameraY
+					mov r8d, dMouseX
+					add r8d, dCameraX
+					shr r9d, 5
+					shr r8d, 5
+					mov ecx, 0 ; type: soldier
 					call ActorBankCreate
 			b1:
+	
+	; [DEBUG] destroy tile when RMB
+		; check mouse right down
+			lea rcx, dKeyMap
+			mov al, byte ptr [rcx+2]
+			cmp al, 0
+			je c08
+		; check ctrl key down
+			lea rcx, dHeldKeyMap
+			mov al, byte ptr [rcx+11h]
+			test al, al
+			jz c08
+				; debug print
+					mov rdx, 1
+					lea rcx, cRMouseDownStr
+					call ConsolePrint
+				; create actor
+					mov ecx, dMouseX
+					mov edx, dMouseY
+					add ecx, dCameraX
+					add edx, dCameraY
+					shr ecx, 5
+					shr edx, 5
+					mov r8d, 128
+					call GridDamageTile
+			c08:
 	; return
 		add rsp, 8
 		ret
