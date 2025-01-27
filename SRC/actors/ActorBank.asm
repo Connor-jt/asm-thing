@@ -21,6 +21,7 @@ dLastActorIndex qword 0 ; index * 24
 dFirstFreeIndex qword 0 ; index * 24
 
 actor_placement_failed_str word 'a','c','t','o','r',' ','p','l','a','c','e','m','e','n','t',' ','b','l','o','c','k','e','d','!','!',0
+actor_placement_success_str word 'a','c','t','o','r',' ','s','u','c','c','e','s','f','u','l','l','y',' ','c','r','e','a','t','e','d','.',0
 
 ; Actor struct
 ;	0h, 4 : handle
@@ -190,6 +191,10 @@ ActorBankCreate PROC
 		mov ecx, r8d ; x
 		mov r8d, dword ptr [r10] ; handle
 		call GridWriteActorAt
+	; debug log actor creation	
+		mov rdx, 1
+		lea rcx, actor_placement_success_str
+		call ConsolePrint
 	; complete
 		mov rax, r10
 		ret

@@ -16,8 +16,7 @@ ActorInstructionsTick PROTO
 GridDamageTile PROTO
 
 .data
-cLMouseDownStr word 'L','e','f','t',' ','m','o','u','s','e',' ','w','a','s',' ','p','r','e','s','s','e','d','!','!',0
-cRMouseDownStr word 'r','i','g','h','t',' ','m','o','u','s','e',' ','p','r','e','s','s','e','d',' ','!','!',0
+RMB_tile_damage_str word 'd','a','m','a','g','e',' ','a','p','p','l','i','e','d',0
 
 .code
 
@@ -44,10 +43,6 @@ GameTick PROC
 			mov al, byte ptr [rcx+16]
 			cmp al, 0
 			je b1
-				; debug print
-					mov rdx, 1
-					lea rcx, cLMouseDownStr
-					call ConsolePrint
 				; create actor
 					mov r9d, dMouseY
 					add r9d, dCameraY
@@ -57,6 +52,7 @@ GameTick PROC
 					shr r8d, 5
 					mov ecx, 0 ; type: soldier
 					call ActorBankCreate
+						
 			b1:
 	
 	; [DEBUG] destroy tile when RMB
@@ -72,7 +68,7 @@ GameTick PROC
 			jz c08
 				; debug print
 					mov rdx, 1
-					lea rcx, cRMouseDownStr
+					lea rcx, RMB_tile_damage_str
 					call ConsolePrint
 				; create actor
 					mov ecx, dMouseX
