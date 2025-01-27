@@ -75,28 +75,28 @@ BeginPathfind PROC
 		; if dest Y > farthest neighbor node
 			mov eax, edx
 			add eax, 15
-			cmp eax, r9d
+			cmp r9d, eax
 			jle b43
 				mov r9d, eax
 				jmp b44
 			b43:
 		; if dest Y < farthest neighbor node
 			sub eax, 31
-			cmp eax, r9d
+			cmp r9d, eax 
 			jge b44
 				mov r9d, eax
 			b44:
 		; if dest X > farthest neighbor node
 			mov eax, ecx
 			add eax, 15
-			cmp eax, r8d
+			cmp r8d, eax
 			jle b45
 				mov r8d, eax
 				jmp b46
 			b45:
 		; if dest X < farthest neighbor node
 			sub eax, 31
-			cmp eax, r8d
+			cmp r8d, eax
 			jge b46
 				mov r8d, eax
 			b46:

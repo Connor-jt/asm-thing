@@ -186,14 +186,10 @@ ActorBankCreate PROC
 		mov word ptr [r10+14], 0 ; ??? unused
 		mov dword ptr [r10+20], 0 ; ???? unused
 	; place this actor into a tile???
-		
-	; clear tile before putting actor onto it?
-	move_tile:
-		; write new pos
-			mov edx, r9d ; y
-			mov ecx, r8d ; x
-			mov r8d, dword ptr [r10] ; handle
-			call GridWriteActorAt
+		mov edx, r9d ; y
+		mov ecx, r8d ; x
+		mov r8d, dword ptr [r10] ; handle
+		call GridWriteActorAt
 	; complete
 		mov rax, r10
 		ret

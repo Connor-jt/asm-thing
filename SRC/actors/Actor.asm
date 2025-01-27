@@ -45,6 +45,15 @@ ActorStepHelper PROC
 			mov edx, r14d ; y
 			mov ecx, r13d ; x
 			call GridWriteActorAt
+		; update pathfinding objectve state
+			movzx ecx, byte ptr [r12+13]
+			mov eax, ecx
+			shl eax, 2
+			and eax, 48 ; keep bits for next step
+			and ecx, 195 ; keep upper 2 bits and lower 2 bits
+			sub ecx, 64 ; decrement number of steps remaining
+			or eax, ecx
+			mov byte ptr [r12+13], al
 		; return success
 			mov rax, 1
 			ret
@@ -67,11 +76,11 @@ ActorTick PROC
 		shr eax, 1
 		and eax, 3
 		cmp eax, 1
-		jl skip_objective  ; 00: means no objective
+		jl no_objective  ; 00: means no objective
 		je move_objective  ; 01: means moveto
 		cmp eax, 2
-		je skip_objective  ; 10: means attack
-		jmp skip_objective ; 11: means UNDEFINED objective
+		je no_objective  ; 10: means attack
+		jmp no_objective ; 11: means UNDEFINED objective
 
 		move_objective:
 			; check for predetermined next nodes to go to
@@ -86,10 +95,10 @@ ActorTick PROC
 					movzx ecx, word ptr [r12 + 8]  ; src X
 					call BeginPathfind
 					; if pathfind failed, complete objective
+					pop rcx
 					cmp eax, 64
 					jl complete_objective
 					; otherwise, paste that info into our actor position state
-					pop rcx
 					and ecx, 3 ; clear bits
 					or ecx, eax ; write bits
 					mov byte ptr [r12+13], cl
@@ -126,7 +135,7 @@ ActorTick PROC
 					; run mov to new tile logic
 						call ActorStepHelper
 						cmp eax, 0
-						jne b93 ; skip the rest if we did not actually move
+						je b93 ; skip the rest if we did not actually move
 					; clear old pos
 						inc r13d ; restore og position value
 						mov edx, r14d ; y
@@ -155,7 +164,7 @@ ActorTick PROC
 					; run mov to new tile logic
 						call ActorStepHelper
 						cmp eax, 0
-						jne b93 ; skip the rest if we did not actually move
+						je b93 ; skip the rest if we did not actually move
 					; clear old pos
 						dec r13d ; restore og position value
 						mov edx, r14d ; y
@@ -183,7 +192,7 @@ ActorTick PROC
 					; run mov to new tile logic
 						call ActorStepHelper
 						cmp eax, 0
-						jne b93 ; skip the rest if we did not actually move
+						je b93 ; skip the rest if we did not actually move
 					; clear old pos
 						inc r14d ; restore og position value
 						mov edx, r14d ; y
@@ -212,7 +221,7 @@ ActorTick PROC
 					; run mov to new tile logic
 						call ActorStepHelper
 						cmp eax, 0
-						jne b93 ; skip the rest if we did not actually move
+						je b93 ; skip the rest if we did not actually move
 					; clear old pos
 						dec r14d ; restore og position value
 						mov edx, r14d ; y
@@ -225,6 +234,58 @@ ActorTick PROC
 				b93:
 				pop r14
 				pop r13
+				jmp skip_objective
+
+		no_objective:
+			; here we simply take the time to realign our unit to the center of whatever tile they are on
+			; check step count bits for is recentered state
+				movzx ecx, word ptr [r12+12]
+				cmp ecx, 49152 ; uppest 2 bits
+				jge skip_objective
+			; if not recentered yet
+			; check Y offset
+				mov eax, ecx
+				and eax, 31
+				cmp eax, 16
+				jl recenter_down
+				jg recenter_up
+			; check X offset
+				shr ecx, 5
+				and ecx, 31
+				cmp ecx, 16
+				jl recenter_right
+				jg recenter_left
+			; otherwise, mark as recentered
+				or word ptr [r12+12], 49152
+				jmp skip_objective
+
+			recenter_left:
+				; dec X offset
+					sub word ptr [r12+12], 32
+				; set left facing animation
+					and byte ptr [r12+4], 199
+					or  byte ptr [r12+4], 24
+				jmp skip_objective
+			recenter_right:
+				; inc X offset
+					add word ptr [r12+12], 32
+				; set right facing animation
+					and byte ptr [r12+4], 199
+					or  byte ptr [r12+4], 32
+				jmp skip_objective
+			recenter_up:
+				; dec Y offset
+					dec word ptr [r12+12]
+				; set top facing animation
+					and byte ptr [r12+4], 199
+					or  byte ptr [r12+4], 8
+				jmp skip_objective
+			recenter_down:
+				; inc Y offset
+					inc word ptr [r12+12]
+				; set bottom facing animation
+					and byte ptr [r12+4], 199
+					or  byte ptr [r12+4], 48
 				jmp skip_objective
 
 		complete_objective:

@@ -56,6 +56,7 @@ ActorInstructionsTick PROC
 			; set actor to moveto objective mode
 				and byte ptr [rax+4], 249 ; clear objective bits
 				or byte ptr [rax+4], 2 ; write move to objective
+				and word ptr [rax+12], 1023 ; clear path direction bits
 			; finally, assign the new destination
 				mov edx, dMouseX
 				add edx, dCameraX
