@@ -25,12 +25,17 @@
 	GetActorScreenPos PROTO
 ; windows funcs
 	FrameRect PROTO
+	FillRect PROTO
 ; exports
 	public dSelectedActorsList
 	public dSelectedActorsCount
 ; extern colors
 	extern Brush_ActorHoverGreen : dword
 	extern Brush_ActorSelected : dword
+	extern Brush_ActorHover_Destination : dword
+	extern Brush_ActorHover_Step1 : dword
+	extern Brush_ActorHover_Step2 : dword
+
 
 .data
 
@@ -160,6 +165,137 @@ ActorSelectRender PROC
 				lea rdx, [rsp+20h] ; not sure this is quite right?
 				mov rcx, r15
 				call FrameRect
+
+			; check for destination
+				movzx eax, byte ptr [r12+4]
+				and eax, 6
+				cmp eax, 2
+				jne c11
+					; render destination
+						; get X coord
+							movsx r8d, word ptr [r12+16]
+							shl r8d, 5
+							sub r8d, dCameraX
+						; set X coords
+							mov r9d, r8d
+							add r8d, 10
+							add r9d, 22
+						; get Y coord
+							movsx r10d, word ptr [r12+18]
+							shl r10d, 5
+							sub r10d, dCameraY
+						; set Y coords
+							mov r11d, r10d
+							add r10d, 10
+							add r11d, 22
+						; construct Rect struct
+							mov dword ptr [rsp+20h], r8d
+							mov dword ptr [rsp+28h], r9d
+							mov dword ptr [rsp+24h], r10d
+							mov dword ptr [rsp+2Ch], r11d
+						; drawcall square	
+							mov r8d, Brush_ActorHover_Destination
+							lea rdx, [rsp+20h] ; not sure this is quite right?
+							mov rcx, r15
+							call FillRect
+					; if we have 1 queued step
+						movzx r13d, byte ptr [r12+13]
+						cmp r13d, 64
+						jl c11
+						; load player coords into thingo 
+							; get coords
+								movsx r8d, word ptr [r12+8]
+								movsx r10d, word ptr [r12+10]
+								shl r8d, 5
+								shl r10d, 5
+								sub r8d, dCameraX
+								sub r10d, dCameraY
+							; set X coords
+								mov r9d, r8d
+								add r8d, 12
+								add r9d, 20
+							; set Y coords
+								mov r11d, r10d
+								add r10d, 12
+								add r11d, 20
+						; adjust coords based on what direction the tile is
+							mov eax, r13d
+							shr eax, 4
+							and eax, 3
+							cmp eax, 2
+							je bottom
+							jg right
+							cmp eax, 1
+							je top
+							;left 
+								; dec X
+								sub r8d, 32
+								sub r9d, 32
+								jmp c12
+							right: 
+								; inc X
+								add r8d, 32
+								add r9d, 32
+								jmp c12
+							top: 
+								; dec Y
+								sub r10d, 32
+								sub r11d, 32
+								jmp c12
+							bottom: 
+								; inc Y
+								add r10d, 32
+								add r11d, 32
+							c12:
+						; construct Rect struct
+							mov dword ptr [rsp+20h], r8d
+							mov dword ptr [rsp+28h], r9d
+							mov dword ptr [rsp+24h], r10d
+							mov dword ptr [rsp+2Ch], r11d
+						; drawcall  square	
+							mov r8d, Brush_ActorHover_Step1
+							lea rdx, [rsp+20h] ; not sure this is quite right?
+							mov rcx, r15
+							call FillRect
+					; if we also have a 2nd queued step
+						cmp r13d, 128
+						jl c11
+						; adjust coords based on what direction the tile is
+							mov eax, r13d
+							shr eax, 2
+							and eax, 3
+							cmp eax, 2
+							je __bottom
+							jg __right
+							cmp eax, 1
+							je __top
+							;left 
+								; dec X
+								sub dword ptr [rsp+20h], 32
+								sub dword ptr [rsp+28h], 32
+								jmp c13
+							__right: 
+								; inc X
+								add dword ptr [rsp+20h], 32
+								add dword ptr [rsp+28h], 32
+								jmp c13
+							__top: 
+								; dec Y
+								sub dword ptr [rsp+24h], 32
+								sub dword ptr [rsp+2Ch], 32
+								jmp c13
+							__bottom: 
+								; inc Y
+								add dword ptr [rsp+24h], 32
+								add dword ptr [rsp+2Ch], 32
+							c13:
+						; drawcall border square	
+							mov r8d, Brush_ActorHover_Step2
+							lea rdx, [rsp+20h] ; not sure this is quite right?
+							mov rcx, r15
+							call FillRect
+				c11:
+
 		; render healthbar for hovered actor
 			mov rcx, r15
 			call ForceDrawActorHealth
