@@ -39,8 +39,6 @@
 
 .data
 
-cActorSelectedStr dw 'A','c','t','o','r',' ','c','o','u','n','t',0
-
 dSelectedActorsList dword MAX_SELECTED_ACTORS dup(0) ; 100 selected actor slots
 dSelectedActorsCount dword 0
 dHoveredActor dword -1
@@ -402,13 +400,6 @@ ActorSelectTick PROC
 				; cleanup
 					mov dMouseHeldDownFor, 0
 					mov dShouldShowSelectBounds, 0
-				; [DEBUG] print out how many actors we have selected
-					mov rdx, 1
-					lea rcx, cActorSelectedStr
-					call ConsolePrint
-					xor rcx, rcx
-					mov ecx, dSelectedActorsCount
-					call ConsolePrintNumber
 		b18:
 
 	; return
