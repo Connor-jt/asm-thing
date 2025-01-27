@@ -44,6 +44,7 @@ cActorSelectedStr dw 'A','c','t','o','r',' ','c','o','u','n','t',0
 dSelectedActorsList dword MAX_SELECTED_ACTORS dup(0) ; 100 selected actor slots
 dSelectedActorsCount dword 0
 dHoveredActor dword -1
+dLastHoveredActor dword -1
 
 dOriginalMouseX dword 0
 dOriginalMouseY dword 0
@@ -125,11 +126,17 @@ ActorSelectRender PROC
 		loop_end:
 
 	; render border for hovered actor
-		; skip if no hovered actor
+		; skip if no hovered actor, or no prev hovered actor
 			cmp dHoveredActor, -1
-			je skip_hover_border
+			je c15
+				mov ecx, dHoveredActor
+				mov dLastHoveredActor, ecx
+			c15:
+				cmp dLastHoveredActor, -1
+				je skip_hover_border
+				mov ecx, dLastHoveredActor
+			c16:
 		; fetch current actor ptr
-			mov ecx, dHoveredActor
 			call ActorPtrFromHandle
 			mov r12, rax
 		; if actor null, skip
