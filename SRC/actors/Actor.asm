@@ -157,7 +157,7 @@ ActorTick PROC
 						and eax, 31
 					; if not immienent tile jump, just add offset
 						cmp eax, 31
-						jle b95
+						jge b95
 							add word ptr [r12+12], 32
 							jmp b93
 						b95:
@@ -214,7 +214,7 @@ ActorTick PROC
 						and eax, 31
 					; if not immienent tile jump, just add offset
 						cmp eax, 31
-						jle b97
+						jge b97
 							inc word ptr [r12+12]
 							jmp b93
 						b97:
