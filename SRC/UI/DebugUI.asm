@@ -88,13 +88,15 @@ DebugUITickEnd PROC ;NOTE: this is called after the render function
 DebugUITickEnd ENDP
 
 
-; r14: hwnd (pass through)
-; r12: hdc (pass through)
+; r14: hwnd (pass through) BAD!!!
+; rcx: hdc
 DebugUIRender PROC
 	; config system vars
-		sub rsp, 28h
+		push r12
+		mov r12, rcx
+		sub rsp, 20h
 		mov rdx, 00085FF00h ; color ; #00ff85
-		mov rcx, r12 ; hdc
+		;mov rcx, r12 ; hdc
 		call SetTextColor
 	; draw fps
 		mov r8, 20
@@ -142,7 +144,8 @@ DebugUIRender PROC
 		lea rcx, cPrintActorStr
 		call DebugUIDrawLabel
 	; reset vars
-		add rsp, 28h
+		add rsp, 20h
+		pop r12
 		ret
 DebugUIRender ENDP
 
