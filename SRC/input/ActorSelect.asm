@@ -67,7 +67,7 @@ ActorSelectRender PROC
 		lloop:
 			; break if at the end of the array
 				cmp r13d, dSelectedActorsCount
-				je loop_end
+				jge loop_end
 			; fetch current actor ptr
 				mov rcx, qword ptr [r12+r13*4]
 				call ActorPtrFromHandle
@@ -139,7 +139,7 @@ ActorSelectRender PROC
 			mov r12, rax
 		; if actor null, skip
 			test rax, rax
-			jz b31
+			jz skip_hover_border
 		; render border
 			; verify actor is on screen
 				mov rcx, r12

@@ -26,6 +26,8 @@ Grid qword 4096 dup(0) ; 64x64 ; 32kb !!
 ; Grid data
 ; 11111111 00000000 00000000 00000000 \ 00000000 : tile type
 ; 00000000 11111111 00000000 00000000 \ 00000000 : health
+; 00000000 00000000 11110000 00000000 \ 00000000 : loot value
+; 00000000 00000000 00000000 00010000 \ 00000000 : afiliation
 ; 00000000 00000000 00000000 00001100 \ 00000000 : tile_state (00: uninitialized, 01: clear path, 10: destructible block, 11: indestructible block)
 ; 00000000 00000000 00000000 00000011 \ 00000000 : tile_actors (00: no actors, 01: has actor, 10: has actor_cluster)
 ; 00000000 00000000 00000000 00000000 \ FFFFFFFF : actor handle | actor cluster handle
@@ -356,7 +358,9 @@ GridTilePathingCost PROC
 		ret
 	return_destructible_block:
 		shr rax, 48
-		and rax, 8
+		and rax, 255
+		add rax, 1 ; here we half the cost + round up, so 5 hp tiles cost 3 pathing points
+		shr rax, 1
 		cmp rax, 63
 		jg return_impassible
 		ret

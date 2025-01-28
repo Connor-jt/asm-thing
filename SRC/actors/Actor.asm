@@ -33,7 +33,9 @@ ActorStepHelper PROC
 	; otherwise indestructible blocker 
 		jmp return
 	damage_tile:
-		mov r8d, 1 ; damage  ; TODO: hook up unit damage value here??
+		call GetActorStatsFromPtr
+		mov r8d, eax
+		shr r8d, 24
 		mov edx, r14d ; y
 		mov ecx, r13d ; x
 		call GridDamageTile
@@ -67,7 +69,7 @@ ActorStepHelper ENDP
 ActorTick PROC
 	; if action cooldown is active, skip objectives till the cooldown is over
 		cmp byte ptr[r12+7], 0
-		jne b91
+		je b91
 			dec byte ptr[r12+7]
 			jmp skip_objective
 		b91:

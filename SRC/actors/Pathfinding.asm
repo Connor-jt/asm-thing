@@ -57,8 +57,8 @@ BeginPathfind PROC
 		push rbp
 		xor r12d, r12d ; count
 		xor r13d, r13d ; index
-		xor r14d, r14d ; shortcut_index
-		xor r15d, r15d ; current_route_cost
+		mov r14d, -1   ; shortcut_index
+		mov r15d,  1   ; current_route_cost
 		xor  ebx,  ebx ; skip_count
 	   ;xor  ebp,  ebp ; is shortcuting
 	; clear grid
@@ -74,28 +74,28 @@ BeginPathfind PROC
 	; if destination is outside of our local grid, find next best spot
 		; if dest Y > farthest neighbor node
 			mov eax, edx
-			add eax, 15
+			add eax, 7
 			cmp r9d, eax
 			jle b43
 				mov r9d, eax
 				jmp b44
 			b43:
 		; if dest Y < farthest neighbor node
-			sub eax, 31
+			sub eax, 15
 			cmp r9d, eax 
 			jge b44
 				mov r9d, eax
 			b44:
 		; if dest X > farthest neighbor node
 			mov eax, ecx
-			add eax, 15
+			add eax, 7
 			cmp r8d, eax
 			jle b45
 				mov r8d, eax
 				jmp b46
 			b45:
 		; if dest X < farthest neighbor node
-			sub eax, 31
+			sub eax, 15
 			cmp r8d, eax
 			jge b46
 				mov r8d, eax
@@ -155,12 +155,12 @@ BeginPathfind PROC
 			cmp r14d, -1
 			je b85
 				movzx ecx, byte ptr [rax + r14]
-				mov ebp, 1 ; yes shortcut
+				mov ebp, r14d ; yes shortcut
 				mov r14d, -1 ; clear has shortcut value
 				jmp b86
 			b85:
 				movzx ecx, byte ptr [rax + r13]
-				xor ebp, ebp ; no shortcut
+				mov ebp, -1 ; no shortcut
 			b86:
 		; if this neighbor is the destination then start backtrace?????
 			; check X
@@ -268,7 +268,7 @@ BeginPathfind PROC
 		
 
 		; if shortcut taken, skip increment
-			cmp ebp, 0
+			cmp ebp, -1
 			jne b59
 		; if current index >= count, then start the search over & bump the route cost 
 			inc r13d
@@ -286,14 +286,14 @@ BeginPathfind PROC
 		xor r13d, r13d ; new index
 		mov r14d, 255 ; best distance tracker
 		xor r15d, r15d ; best distance neighbor index
+		lea rsi, next_neighbor_list
+		;lea rdi, neighbor_grid
 		b63:
 			; get current neighbor
-				lea rax, next_neighbor_list
-				movzx ecx, byte ptr [rax + r13]
+				movzx eax, byte ptr [rsi + r13]
 			; get their info from the grid
-				lea rdx, neighbor_grid
-				movzx eax, byte ptr [rdx + rcx]
-				shr eax, 2
+			;	movzx eax, byte ptr [rdi + rcx]
+			;	shr eax, 2
 			; calculate the distance
 				; Y dist
 					mov ecx, eax
@@ -322,8 +322,15 @@ BeginPathfind PROC
 		jmp b63
 	find_best_match_break:
 		mov r13d, r15d
-
+		jmp c13
 	loop_break:
+		; check if we finished on a shortcut index or not
+		cmp ebp, -1
+		je c13
+			mov r13d, ebp
+		c13:
+
+
 	; break indexed tile into coords
 		lea rsi, neighbor_grid
 		lea rax, next_neighbor_list
@@ -362,7 +369,7 @@ BeginPathfind PROC
 			; make room
 				shr eax, 2
 			; invert current direction
-				neg edi
+				not edi
 				and edi, 3
 			; shift into place
 				shl edi, 4

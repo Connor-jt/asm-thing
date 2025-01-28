@@ -59,7 +59,7 @@ actor_placement_success_str word 'a','c','t','o','r',' ','s','u','c','c','e','s'
 ; +1       +0
 
 
-dActorStatsList qword	0000000203401020h, ; basic infantry
+dActorStatsList qword	0000000203401010h, ; basic infantry
 						0h
 ; Actor stats struct
 ;	00000000000000FF : max action cooldown
@@ -264,9 +264,12 @@ ReleaseActor ENDP
 ; ecx: handle
 ReleaseActorByHandle PROC
 	call ActorPtrFromHandle
-	mov rcx, rax
-	call ReleaseActor
-	ret
+	cmp rax, 0
+	je return
+		mov rcx, rax
+		call ReleaseActor
+	return:
+		ret
 ReleaseActorByHandle ENDP
 
 ; ecx: actor handle
