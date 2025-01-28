@@ -4,10 +4,13 @@ SetTextColor PROTO
 
 U64ToWStr PROTO
 
+ConsoleFadeTimer equ 15 ; 1.5 second
+
 .data
 
 dConsoleBuffer db 4096 dup(0) ; NOTE: this is for a WIDE str, so theres only 2048 characters of space
 dConsolePosition dq 0
+dConsoleStartPosition dq 0
 dConsoleHasHadReset db 0
 
 dClearNextTicks dq 0 
@@ -71,6 +74,11 @@ ConsolePrint PROC
 		jne copy_bytes
 	mov rdx, 2048 ; make sure we reset the writing point
 	mov dConsoleHasHadReset, 1 ; so we know that the first byte of this buffer is probably not actually the start of a new word
+	; push our start position back as well, and reset if it was not less than 2048 thingos away???
+		sub dConsoleStartPosition, 2048
+		jge c19
+			mov dConsoleStartPosition, 0
+		c19:
 	jmp return_from_pop_console
 ConsolePrint ENDP
 
@@ -100,25 +108,74 @@ ConsoleRender PROC
 		mov rdx, 0004040ffh ; color
 		;mov rcx, rcx ; hdc (passes straight through)
 		call SetTextColor
-	; calculate where our start point is for the string
+
+	; config fade timer
 		lea rdx, dConsoleBuffer ; wstr ptr
+		; if start & end position are the same, 
+			mov rax, dConsoleStartPosition
+			add rax, 2
+			cmp rax, dConsolePosition
+			jl c14
+				mov dClearNextTicks, 0
+				jmp skip_draw ; nothing to display
+			c14:
+		; else tick
+			inc dClearNextTicks
+			cmp dClearNextTicks, ConsoleFadeTimer
+			jl c15
+				mov dClearNextTicks, 0
+				; here we clear the current line by incrementing insertion index until we reach a newline 
+				mov rax, dConsoleStartPosition
+				add rax, 2 ; force it to skip over current newline if we are on one
+				__look_for_next_newline:
+					cmp rax, dConsolePosition
+					jge cleared_last_line
+					mov cl, byte ptr [rdx+rax]
+					cmp cl, 10	
+					je break_loop
+					add rax, 2
+					jmp __look_for_next_newline
+				break_loop:
+				mov dConsoleStartPosition, rax
+				jmp c15
+
+				cleared_last_line:
+					sub rax, 2
+					mov dConsoleStartPosition, rax
+					jmp skip_draw
+			c15:
+
+	; calculate where our start point is for the string
 		mov rax, dConsolePosition
-		; if the string is too long, then max out its length
-		cmp rax, 2048
-		jle use_console_buffer_begin
-			sub rax, 2048
-			jmp look_for_next_newline
-		use_console_buffer_begin:
-			mov rax, 0
-			cmp dConsoleHasHadReset, 0
-			je finish_buffer_start_point
+		; if the string is too long, then increase the string start pos
+			cmp rax, 2048
+			jle c16
+				sub rax, 2048
+				jmp c17
+			c16:
+				xor eax, eax
+			c17:
+		; if calculated position is higher than forced start pos, then update forced start
+			cmp rax, dConsoleStartPosition
+			jle c18
+				mov dConsoleStartPosition, rax
+				jmp c19
+			c18:
+		; else use console start position as our insertion point
+				mov rax, dConsoleStartPosition
+			c19:
+		; if we are at offset 0, then we want to skip the newline entry point search
+			cmp rax, 0
+			jne look_for_next_newline
+				cmp dConsoleHasHadReset, 0
+				je skip_buffer_entry_search
 		; if we dont start at the start of the buffer, then look for the nearest newline character to print our string from
 		look_for_next_newline:
 			mov cl, byte ptr [rdx+rax]
 			add rax, 2
 			cmp cl, 10	
 			jne look_for_next_newline
-		finish_buffer_start_point:
+		skip_buffer_entry_search:
 	; render everything to text box
 		sub rsp, 18h
 		mov dword ptr [rsp+12], 240 ; bottom
@@ -134,6 +191,10 @@ ConsoleRender PROC
 		call DrawTextW
 	; cleanup & return
 		add rsp, 60h
+		pop r12
+		ret
+	skip_draw:
+		add rsp, 20h
 		pop r12
 		ret
 ConsoleRender ENDP
